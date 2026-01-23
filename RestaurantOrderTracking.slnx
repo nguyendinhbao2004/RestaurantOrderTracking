@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="Application/RestaurantOrderTracking.Application.csproj" />
+    <Project Path="Domain/RestaurantOrderTracking.Domain.csproj" />
+    <Project Path="Infrastructure/RestaurantOrderTracking.Infrastructure.csproj" />
+    <Project Path="RestaurantOrderTracking/RestaurantOrderTracking.WebApi.csproj" />
+  </Folder>
+</Solution>
