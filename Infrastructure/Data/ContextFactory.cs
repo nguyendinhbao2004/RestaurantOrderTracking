@@ -1,38 +1,34 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.IO;
 
 namespace RestaurantOrderTracking.Infrastructure.Data
 {
-    //public class ContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
-    //{
-    //    public ApplicationDbContext CreateDbContext(string[] args)
-    //    {
-    //        var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+    public class ContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
+    {
+        public ApplicationDbContext CreateDbContext(string[] args)
+        {
+            // Build configuration from appsettings
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .Build();
 
-    //        // Thay chuỗi kết nối của bạn vào đây (Copy từ appsettings.json)
-    //        var configuration = new ConfigurationBuilder()
-    //            .AddJsonFile("appsettings.json", optional: false)
-    //            .AddJsonFile("appsettings.Development.json", optional: true)
-    //            .AddEnvironmentVariables()
-    //            .Build();
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-    //        var connectionString =
-    //            configuration.GetConnectionString("DefaultConnection");
+            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
-    //        optionsBuilder.UseNpgsql(connectionString, o =>
-    //        {
-    //            // Chỉ định migration nằm ngay tại project này
-    //            o.MigrationsAssembly("ChatBotInterfacture");
+            // Configure PostgreSQL with Npgsql
+            optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                // Specify the migrations assembly
+                npgsqlOptions.MigrationsAssembly("RestaurantOrderTracking.Infrastructure");
+            });
 
-    //            // --- CHÌA KHÓA ĐỂ SỬA LỖI ---
-    //            o.UseVector();
-    //        });
-
-    //        return new ApplicationDbContext(optionsBuilder.Options);
-    //    }
-    //}
+            return new ApplicationDbContext(optionsBuilder.Options);
+        }
+    }
 }

@@ -6,5 +6,6 @@ namespace RestaurantOrderTracking.Application.Dto.Auth
 {
     public class AuthResponse
     {
+        
     }
 }

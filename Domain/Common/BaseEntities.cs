@@ -12,5 +12,12 @@ namespace RestaurantOrderTracking.Domain.Common
         public DateTime? UpdatedAt { get; set; }
         public string? UpdatedBy { get; set; }
         public bool IsDeleted { get; set; } = false; // Soft Delete
+
+        // Domain Events cho các side-effect (gửi noti, log history)
+        private List<IDomainEvent> _domainEvents = new();
+        public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
+        public void AddDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+        public void ClearDomainEvents() => _domainEvents.Clear();
     }
 }

@@ -4,11 +4,10 @@ using System.Text;
 
 namespace RestaurantOrderTracking.Domain.Enums
 {
-    public enum TableStatus
+    public enum OrderItemStatus
     {
-        Available = 0,
-        Occupied = 1,
-        Reserved = 2,
-        OutOfService = 3
+        Pending = 1,
+        Cooking = 2,
+        Served = 3,
     }
 }

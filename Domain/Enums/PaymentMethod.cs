@@ -4,11 +4,11 @@ using System.Text;
 
 namespace RestaurantOrderTracking.Domain.Enums
 {
-    public enum TableStatus
+    public enum PaymentMethod
     {
-        Available = 0,
-        Occupied = 1,
-        Reserved = 2,
-        OutOfService = 3
+        cash = 1,
+        credit_card = 2,
+        mobile_payment = 3,
+        bank_transfer = 4
     }
 }
