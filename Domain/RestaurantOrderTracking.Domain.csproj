@@ -11,8 +11,5 @@
 		<PackageReference Include="Pgvector" Version="0.3.2" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
 	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="Interface\Repository\" />
-	</ItemGroup>
 
 </Project>
