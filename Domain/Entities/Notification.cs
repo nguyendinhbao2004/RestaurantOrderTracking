@@ -1,41 +1,49 @@
 ﻿using RestaurantOrderTracking.Domain.Common;
+using RestaurantOrderTracking.Domain.Enums;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace RestaurantOrderTracking.Domain.Entities
 {
     public class Notification : BaseEntities
     {
-        public Guid OrderItemId { get; private set; }
-        public virtual OrderItems OrderItems { get; private set; }
+        public Guid? OrderItemId { get; private set; }
+        public virtual OrderItem? OrderItem { get; private set; }
 
         public Guid AccountId { get; private set; }
-        public virtual Account Accounts { get; private set; }
+        public virtual Account Account { get; private set; } = null!;
 
-        public Guid TableId { get; private set; }
-        public virtual Table Tables { get; private set; }
+        public Guid? TableId { get; private set; }
+        public virtual Table? Table { get; private set; }
 
-        public string Title { get; private set; }
+        public string Title { get; private set; } = null!;
+        public string Message { get; private set; } = null!;
+        public NotificationType Type { get; private set; }
+        public bool IsRead { get; private set; }
+        public DateTime? ReadAt { get; private set; }
 
-        public string Message { get; private set; }
+        protected Notification() { }
 
-        public DateTime ReadAt { get; private set; }
-
-        public Notification(Guid orderItemId, Guid accountId, Guid tableId, string title, string message)
+        public Notification(Guid accountId, string title, string message, NotificationType type, Guid? orderItemId = null, Guid? tableId = null)
         {
-            OrderItemId = orderItemId;
             AccountId = accountId;
-            TableId = tableId;
             Title = title;
             Message = message;
+            Type = type;
+            OrderItemId = orderItemId;
+            TableId = tableId;
+            IsRead = false;
         }
 
         public void MarkAsRead()
         {
+            IsRead = true;
             ReadAt = DateTime.UtcNow;
         }
 
-
+        public void MarkAsUnread()
+        {
+            IsRead = false;
+            ReadAt = null;
+        }
     }
 }

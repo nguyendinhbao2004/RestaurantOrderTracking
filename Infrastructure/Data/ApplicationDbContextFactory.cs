@@ -1,11 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using System.IO;
 
 namespace RestaurantOrderTracking.Infrastructure.Data
 {
-    public class ContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
+    /// <summary>
+    /// Design-time factory for creating ApplicationDbContext instances.
+    /// Used by EF Core tools (migrations, scaffolding) when running from CLI.
+    /// </summary>
+    public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
@@ -26,6 +30,12 @@ namespace RestaurantOrderTracking.Infrastructure.Data
             {
                 // Specify the migrations assembly
                 npgsqlOptions.MigrationsAssembly("RestaurantOrderTracking.Infrastructure");
+                
+                // Enable retry on failure for transient errors
+                npgsqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorCodesToAdd: null);
             });
 
             return new ApplicationDbContext(optionsBuilder.Options);

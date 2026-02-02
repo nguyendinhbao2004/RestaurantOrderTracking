@@ -1,14 +1,13 @@
 ﻿using RestaurantOrderTracking.Domain.Common;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace RestaurantOrderTracking.Domain.Entities
 {
     public class Account : BaseEntities
     {
         public int RoleId { get; private set; }
-        public Role Roles { get; private set; } = null!;
+        public virtual Role Role { get; private set; } = null!;
 
         private readonly List<RefreshToken> _refreshTokens = new();
         public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
@@ -16,17 +15,15 @@ namespace RestaurantOrderTracking.Domain.Entities
         private readonly List<VoiceCommand> _voiceCommands = new();
         public IReadOnlyCollection<VoiceCommand> VoiceCommands => _voiceCommands.AsReadOnly();
 
+        private readonly List<Bill> _bills = new();
+        public IReadOnlyCollection<Bill> Bills => _bills.AsReadOnly();
+
         public string UserName { get; private set; } = null!;
-
         public string FullName { get; private set; } = null!;
-
         public string Phone { get; private set; } = null!;
-
         public string PasswordHash { get; private set; } = null!;
-
-        public Boolean IsActive { get; private set; }
-
-        public Boolean IsWorking { get; private set; }
+        public bool IsActive { get; private set; }
+        public bool IsWorking { get; private set; }
 
         protected Account() { }
 
@@ -37,6 +34,8 @@ namespace RestaurantOrderTracking.Domain.Entities
             FullName = fullName;
             Phone = phone;
             PasswordHash = passwordHash;
+            IsActive = isActive;
+            IsWorking = isWorking;
         }
 
         public void UpdateInfo(string fullName, string phone)
@@ -45,7 +44,7 @@ namespace RestaurantOrderTracking.Domain.Entities
             Phone = phone;
         }
 
-        public void UpdateIsActive(bool isActive, bool isWorking)
+        public void UpdateIsActive(bool isActive)
         {
             IsActive = isActive;
         }
@@ -55,13 +54,23 @@ namespace RestaurantOrderTracking.Domain.Entities
             IsWorking = isWorking;
         }
 
+        public void UpdatePassword(string passwordHash)
+        {
+            PasswordHash = passwordHash;
+        }
+
         public void AddRefreshToken(string token, string jwtId, int expiryDays = 30)
         {
-            // Id là User.Id (kiểu string của Identity)
-            // User tự tạo ra RefreshToken cho chính mình
             var refreshToken = new RefreshToken(this.Id, token, jwtId, DateTime.UtcNow.AddDays(expiryDays));
             _refreshTokens.Add(refreshToken);
         }
 
+        public void RevokeAllRefreshTokens()
+        {
+            foreach (var token in _refreshTokens)
+            {
+                token.Revoke();
+            }
+        }
     }
 }

@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace RestaurantOrderTracking.Domain.Enums
+﻿namespace RestaurantOrderTracking.Domain.Enums
 {
     public enum OrderItemStatus
     {
-        Pending = 1,
+        Pending = 0,
+        Confirmed = 1,
         Cooking = 2,
-        Served = 3,
+        Ready = 3,
+        Delivering = 4,
+        Served = 5,
+        Cancelled = 6
     }
 }

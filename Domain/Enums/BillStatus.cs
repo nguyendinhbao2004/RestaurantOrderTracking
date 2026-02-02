@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace RestaurantOrderTracking.Domain.Enums
+﻿namespace RestaurantOrderTracking.Domain.Enums
 {
     public enum BillStatus
     {
-        unpaid = 1,
-        paid = 2,
-        refunded = 3
+        unpaid = 0,
+        paid = 1,
+        refunded = 2,
+        cancelled = 3
     }
 }
