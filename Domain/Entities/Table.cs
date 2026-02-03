@@ -24,6 +24,7 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         public Table(string tableNumber, Guid areaId, int capacity = 4, TableStatus status = TableStatus.Available, string? qrCode = null)
         {
+            Id = Guid.NewGuid();
             TableNumber = tableNumber;
             AreaId = areaId;
             Capacity = capacity;

@@ -1,4 +1,4 @@
-namespace Application.Feature.Table.Queries.GetAllTable
+namespace Application.Feature.Tables.Queries.GetAllTable
 {
     public class GetAllTableHandler
     {
