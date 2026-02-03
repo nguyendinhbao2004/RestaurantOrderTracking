@@ -30,37 +30,44 @@ namespace RestaurantOrderTracking.Domain.Entities
             Capacity = capacity;
             Status = status;
             QRCode = qrCode;
+            CreatedAt = DateTime.UtcNow;
         }
 
         public void UpdateStatus(TableStatus status)
         {
             Status = status;
+            UpdatedAt = DateTime.UtcNow;
         }
 
         public void UpdateQRCode(string qrCode)
         {
             QRCode = qrCode;
+            UpdatedAt = DateTime.UtcNow;
         }
 
         public void UpdateTableInfo(string tableNumber, int capacity)
         {
             TableNumber = tableNumber;
             Capacity = capacity;
+            UpdatedAt = DateTime.UtcNow;
         }
 
         public void SetAvailable()
         {
             Status = TableStatus.Available;
+            UpdatedAt = DateTime.UtcNow;
         }
 
         public void SetOccupied()
         {
             Status = TableStatus.Occupied;
+            UpdatedAt = DateTime.UtcNow;
         }
 
         public void SetReserved()
         {
             Status = TableStatus.Reserved;
+            UpdatedAt = DateTime.UtcNow;
         }
     }
 }

@@ -7,10 +7,10 @@ namespace Application.Feature.Tables.Commands.Create
 {
     public class CreateTableHandler : IRequestHandler<CreateTableCommand, Result<Guid>>
     {
-        private readonly IGenericRepository<RestaurantOrderTracking.Domain.Entities.Table> _tableRepository;
+        private readonly ITableRepository _tableRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public CreateTableHandler(IGenericRepository<RestaurantOrderTracking.Domain.Entities.Table> tableRepository, IUnitOfWork unitOfWork)
+        public CreateTableHandler(ITableRepository tableRepository, IUnitOfWork unitOfWork)
         {
             _tableRepository = tableRepository;
             _unitOfWork = unitOfWork;

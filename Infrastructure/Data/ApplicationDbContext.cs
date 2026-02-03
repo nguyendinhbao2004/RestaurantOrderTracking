@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using RestaurantOrderTracking.Domain.Entities;
 
 namespace RestaurantOrderTracking.Infrastructure.Data
 {
+    // FIX: Inherit only from IdentityDbContext<Account> (which itself inherits from DbContext)
     public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)

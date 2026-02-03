@@ -3,6 +3,7 @@ using RestaurantOrderTracking.Domain.Interface.Repository;
 using RestaurantOrderTracking.Infrastructure.Data;
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace RestaurantOrderTracking.Infrastructure.Repositories
@@ -19,13 +20,13 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
             _dbSet = _context.Set<T>();
         }
 
-        public async Task AddAsync(T entity)
+        public virtual async Task AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
             // Lưu ý: Chưa gọi SaveChanges() ở đây. UnitOfWork sẽ lo việc đó.
         }
 
-        public void Delete(T entity)
+        public virtual void Delete(T entity)
         {
             // Kiểm tra: Nếu object này đang "lạ hoắc" với EF Core (Detached)
             if (_context.Entry(entity).State == EntityState.Detached)
@@ -37,7 +38,7 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
             _dbSet.Remove(entity);
         }
 
-        public async Task<IEnumerable<T>> FindAsync(System.Linq.Expressions.Expression<Func<T, bool>> predicate)
+        public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
             //Expression<Func<T, bool>> predicate: Đây là biểu thức Lambda
             //Ví dụ: c => c.Price > 100
@@ -45,21 +46,21 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
             return await _dbSet.Where(predicate).AsNoTracking().ToListAsync();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             // AsNoTracking() là chìa khóa tối ưu hiệu năng vì khi lấy data từ sql về thì nó sẽ tự tạo 1 bản sao
             //Lấy dữ liệu từ SQL về và trả cho bạn ngay. Không tạo bản sao, không theo dõi gì cả.
             return await _dbSet.AsNoTracking().ToListAsync();
         }
 
-        public async Task<T?> GetByIdAsync(object id)
+        public virtual async Task<T?> GetByIdAsync(object id)
         {
             return await _dbSet.FindAsync(id);
         }
 
         //Khi dữ liệu từ WebAPI (JSON) gửi lên, nó là một object mới tinh trong RAM, EF Core chưa hề biết đến nó (gọi là trạng thái Detached).
         //Attach giúp EF Core nhận diện: "À, đây là dữ liệu thuộc về Database, hãy quản lý nó".
-        public void Update(T entity)
+        public virtual void Update(T entity)
         {
             // Attach entity vào DbSet nếu nó đang ở trạng thái Detached
             _dbSet.Attach(entity);

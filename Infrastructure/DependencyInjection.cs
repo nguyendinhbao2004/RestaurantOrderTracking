@@ -1,7 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RestaurantOrderTracking.Domain.Entities;
+using RestaurantOrderTracking.Domain.Interface;
 using RestaurantOrderTracking.Domain.Interface.Repository;
+using RestaurantOrderTracking.Infrastructure.Authentication;
 using RestaurantOrderTracking.Infrastructure.Data;
 using RestaurantOrderTracking.Infrastructure.Repositories;
 using System;
@@ -22,8 +26,13 @@ namespace RestaurantOrderTracking.Infrastructure
             //    )
             //);
 
+            
             // Đăng ký các repository ở đây
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+            services.AddScoped<ITableRepository, TableRepository>();
+            services.AddScoped<IAccountRepository, AccountRepository>();
 
             // Thêm các repository cụ thể khác nếu cần
             return services;

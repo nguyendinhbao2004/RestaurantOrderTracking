@@ -72,7 +72,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Accounts");
+                    b.ToTable("Accounts", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.Area", b =>
@@ -105,7 +105,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Areas");
+                    b.ToTable("Areas", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.Bill", b =>
@@ -165,7 +165,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("Bills");
+                    b.ToTable("Bills", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.Category", b =>
@@ -191,7 +191,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.FeedBack", b =>
@@ -231,7 +231,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("FeedBacks");
+                    b.ToTable("FeedBacks", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.Notification", b =>
@@ -289,7 +289,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasIndex("TableId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.Order", b =>
@@ -328,7 +328,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasIndex("TableId");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.OrderItem", b =>
@@ -406,7 +406,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasIndex("WaiterAccountId");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.OrderItemLog", b =>
@@ -451,7 +451,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasIndex("OrderItemId");
 
-                    b.ToTable("OrderItemLogs");
+                    b.ToTable("OrderItemLogs", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.Product", b =>
@@ -499,7 +499,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.RefreshToken", b =>
@@ -550,7 +550,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.Role", b =>
@@ -571,7 +571,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.Table", b =>
@@ -615,7 +615,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasIndex("AreaId");
 
-                    b.ToTable("Tables");
+                    b.ToTable("Tables", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.VoiceCommand", b =>
@@ -676,7 +676,7 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
 
                     b.HasIndex("OrderItemId");
 
-                    b.ToTable("VoiceCommands");
+                    b.ToTable("VoiceCommands", (string)null);
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.Account", b =>
