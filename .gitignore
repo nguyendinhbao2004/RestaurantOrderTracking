@@ -1,3 +1,10 @@
+## --- [ ENVIRONMENT VARIABLES ] ---
+# Never commit .env files with secrets
+.env
+.env.local
+.env.*.local
+# Keep .env.example for reference (not ignored)
+
 ## --- [ PROJECT SPECIFIC - FIX CHO RESTAURANT PROJECT ] ---
 # Chặn thư mục cache của định dạng Solution mới (.slnx)
 .slnx/
