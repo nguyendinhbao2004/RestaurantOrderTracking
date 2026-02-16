@@ -15,6 +15,8 @@ namespace RestaurantOrderTracking.WebApi.Controllers
             _mediator = mediator;
         }
 
+        
+
         /// <summary>
         /// Creates a new table based on the specified command.
         /// </summary>

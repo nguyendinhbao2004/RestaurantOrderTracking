@@ -1,10 +1,21 @@
-﻿using System;
+﻿using AutoMapper;
+using RestaurantOrderTracking.Application.Dto.Table;
+using RestaurantOrderTracking.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace RestaurantOrderTracking.Application.Common.Mapping
 {
-    public class TableMappingProfile
+    public class TableMappingProfile : Profile
     {
+        public TableMappingProfile()
+        {
+            CreateMap<Table, TableResponse>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.TableNumber, opt => opt.MapFrom(src => src.TableNumber))
+                .ForMember(dest => dest.AreaName, opt => opt.MapFrom(src => src.Area.Name))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+        }
     }
 }

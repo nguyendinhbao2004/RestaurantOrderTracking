@@ -9,6 +9,9 @@ namespace RestaurantOrderTracking.Domain.Entities
         public int RoleId { get; private set; }
         public virtual Role Role { get; private set; } = null!;
 
+        private readonly List<WorkSchedule> _workSchedules = new();
+        public IReadOnlyCollection<WorkSchedule> WorkSchedules => _workSchedules.AsReadOnly();
+
         private readonly List<RefreshToken> _refreshTokens = new();
         public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
 

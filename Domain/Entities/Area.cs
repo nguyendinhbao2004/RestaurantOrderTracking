@@ -12,6 +12,9 @@ namespace RestaurantOrderTracking.Domain.Entities
         private readonly List<Table> _tables = new();
         public IReadOnlyCollection<Table> Tables => _tables.AsReadOnly();
 
+        private readonly List<Waiter> _waiters = new();
+        public IReadOnlyCollection<Waiter> Waiters => _waiters.AsReadOnly();
+
         protected Area() { }
 
         public Area(string name, string? description = null)

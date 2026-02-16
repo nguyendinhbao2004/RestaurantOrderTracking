@@ -1,4 +1,5 @@
-﻿using RestaurantOrderTracking.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using RestaurantOrderTracking.Domain.Entities;
 using RestaurantOrderTracking.Domain.Interface.Repository;
 using RestaurantOrderTracking.Infrastructure.Data;
 using System;
@@ -11,6 +12,35 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
     {
         public TableRepository(ApplicationDbContext context) : base(context)
         {
+        }
+
+        public async Task<(IEnumerable<Table>, int totalCount)> GetByIdAsync(Guid id, int pageIndex, int pageSize)
+        {
+            var query = _dbSet.AsQueryable();
+            query = query.Where(t => t.Id == id);
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(t => t.CreatedAt)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            return (items, totalCount);
+        }
+
+        public async Task<(IEnumerable<Table>, int totalCount)> GetPagedTablesAsync(string? keyword, int pageIndex, int pageSize)
+        {
+            var query = _dbSet.AsQueryable();
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                query = query.Where(t => t.TableNumber.Contains(keyword));
+            }
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(t => t.CreatedAt)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            return (items, totalCount);
         }
 
         public Task<bool> IsOccupedAsync(int tableNumber)

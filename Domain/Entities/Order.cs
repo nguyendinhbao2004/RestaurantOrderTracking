@@ -15,10 +15,15 @@ namespace RestaurantOrderTracking.Domain.Entities
         public Guid AccountId { get; private set; }
         public virtual Account Account { get; private set; } = null!;
 
+        public Guid? CustomerId { get; private set; }
+        public virtual Customer? Customer { get; private set; }
+
         public OrderStatus Status { get; private set; }
 
         private readonly List<OrderItem> _orderItems = new();
         public IReadOnlyCollection<OrderItem> OrderItems => _orderItems.AsReadOnly();
+
+        public virtual Bill? Bill { get; set; }
 
         protected Order() { }
 

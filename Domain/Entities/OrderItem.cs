@@ -48,9 +48,9 @@ namespace RestaurantOrderTracking.Domain.Entities
             ConfirmedAt = DateTime.UtcNow;
         }
 
-        public void ConfirmByKitchen(Guid chefId)
+        public void ConfirmByKitchen(Guid chefAccountId)
         {
-            ChefAccountId = chefId;
+            ChefAccountId = chefAccountId;
             Status = OrderItemStatus.Cooking;
             KitchenConfirmedAt = DateTime.UtcNow;
         }
@@ -61,9 +61,9 @@ namespace RestaurantOrderTracking.Domain.Entities
             KitchenFinishedAt = DateTime.UtcNow;
         }
 
-        public void PickUpByWaiter(Guid waiterId)
+        public void PickUpByWaiter(Guid waiterAccountId)
         {
-            WaiterAccountId = waiterId;
+            WaiterAccountId = waiterAccountId;
             Status = OrderItemStatus.Delivering;
             WaiterArrivedAt = DateTime.UtcNow;
         }
