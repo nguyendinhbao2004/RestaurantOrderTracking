@@ -6,9 +6,11 @@ using RestaurantOrderTracking.Application;
 using RestaurantOrderTracking.Domain.Common;
 using RestaurantOrderTracking.Infrastructure;
 using RestaurantOrderTracking.Infrastructure.Data;
+using RestaurantOrderTracking.WebApi.Extensions;
 using RestaurantOrderTracking.WebApi.Middleware;
 using System.Text;
 using System.Text.Json;
+using WebApi.Common;
 
 namespace WebApi
 {
@@ -19,7 +21,7 @@ namespace WebApi
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll", policy =>
+                options.AddPolicy(AppConstants.Cors.AllowAll, policy =>
                 {
                     policy.AllowAnyOrigin()
                           .AllowAnyMethod()
@@ -27,16 +29,17 @@ namespace WebApi
                 });
             });
 
-            // Add services to the container.
+            //add ratelimit
+            builder.Services.AddCustomRateLimiter(builder.Configuration);
 
             // Configure PostgreSQL Database Context
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseNpgsql(
-                    builder.Configuration.GetConnectionString("DefaultConnection"),
+                    builder.Configuration.GetConnectionString(AppConstants.ConnectionStrings.Default),
                     npgsqlOptions =>
                     {
-                        npgsqlOptions.MigrationsAssembly("RestaurantOrderTracking.Infrastructure");
+                        npgsqlOptions.MigrationsAssembly(AppConstants.Ef.MigrationsAssembly);
                     });
             });
 
@@ -55,7 +58,7 @@ namespace WebApi
 .AddJwtBearer(options =>
 {
     // ... (Phần TokenValidationParameters giữ nguyên) ...
-   var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+    var jwtSettings = builder.Configuration.GetSection(AppConstants.Jwt.Section);
    options.TokenValidationParameters = new TokenValidationParameters
    {
        // ... giữ nguyên code cũ của bạn
@@ -63,9 +66,9 @@ namespace WebApi
        ValidateAudience = true,
        ValidateLifetime = true,
        ValidateIssuerSigningKey = true,
-       ValidIssuer = jwtSettings["Issuer"],
-       ValidAudience = jwtSettings["Audience"],
-       IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]))
+         ValidIssuer = jwtSettings[AppConstants.Jwt.Issuer],
+         ValidAudience = jwtSettings[AppConstants.Jwt.Audience],
+         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings[AppConstants.Jwt.Secret]))
    };
 
     // 👇 THÊM ĐOẠN NÀY ĐỂ CUSTOM TRẢ VỀ JSON CHO 401 & 403
@@ -80,7 +83,7 @@ namespace WebApi
            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
            context.Response.ContentType = "application/json";
 
-           var result = Result.Failure("Bạn chưa đăng nhập hoặc Token không hợp lệ.");
+           var result = Result.Failure(AppConstants.Messages.Unauthorized);
            var json = JsonSerializer.Serialize(result);
 
            return context.Response.WriteAsync(json);
@@ -92,7 +95,7 @@ namespace WebApi
            context.Response.StatusCode = StatusCodes.Status403Forbidden;
            context.Response.ContentType = "application/json";
 
-           var result = Result.Failure("Bạn không có quyền truy cập tài nguyên này (Role không đủ).");
+           var result = Result.Failure(AppConstants.Messages.Forbidden);
            var json = JsonSerializer.Serialize(result);
 
            return context.Response.WriteAsync(json);
@@ -104,20 +107,20 @@ namespace WebApi
 
             builder.Services.AddSwaggerGen(option =>
             {
-                option.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                option.SwaggerDoc(AppConstants.Swagger.DocName, new Microsoft.OpenApi.Models.OpenApiInfo
                 {
-                    Title = "Restaurant Order Tracking API",
-                    Version = "v1"
+                    Title = AppConstants.Swagger.Title,
+                    Version = AppConstants.Swagger.DocName
                 });
                 // 1. Định nghĩa Security Scheme (Cấu hình nút Authorize)
-                option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                option.AddSecurityDefinition(AppConstants.Swagger.SecurityScheme, new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
-                    Description = "Vui lòng nhập Token vào ô bên dưới (Không cần chữ 'Bearer ' ở đầu)",
-                    Name = "Authorization",
+                    Description = AppConstants.Swagger.JwtDescription,
+                    Name = AppConstants.Swagger.AuthorizationHeader,
                     Type = SecuritySchemeType.Http,
                     BearerFormat = "JWT",
-                    Scheme = "Bearer"
+                    Scheme = AppConstants.Swagger.SecurityScheme
                 });
                 // 2. Yêu cầu bảo mật (Áp dụng cho toàn bộ API)
                 option.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -128,7 +131,7 @@ namespace WebApi
                             Reference = new OpenApiReference
                             {
                                 Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
+                                Id = AppConstants.Swagger.SecurityScheme
                             }
                         },
                         new string[] {}
@@ -168,6 +171,7 @@ namespace WebApi
 
             app.UseHttpsRedirection();
             app.UseCors("AllowAll");
+            app.UseRateLimiter();
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();

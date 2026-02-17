@@ -1,13 +1,16 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using RestaurantOrderTracking.Application.Feature.Auth.Command.Login;
 using RestaurantOrderTracking.Application.Feature.Auth.Command.Register;
+using WebApi.Common;
 
 namespace RestaurantOrderTracking.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -30,6 +33,7 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         /// <response code="200">Login Successful</response>
         /// <response code="400">Bad Request</response>
         /// <response code="500">Internal Server Error</response>
+        [EnableRateLimiting(AppConstants.ConfigConstants.FixedPolicy)]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginCommand command)
         {
