@@ -45,8 +45,9 @@ namespace RestaurantOrderTracking.Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
-        public void UpdateTableInfo(string tableNumber, int capacity)
+        public void UpdateTableInfo(Guid areaId, string tableNumber, int capacity)
         {
+            AreaId = areaId;
             TableNumber = tableNumber;
             Capacity = capacity;
             UpdatedAt = DateTime.UtcNow;

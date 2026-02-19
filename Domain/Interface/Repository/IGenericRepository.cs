@@ -7,7 +7,7 @@ namespace RestaurantOrderTracking.Domain.Interface.Repository
 {
     public interface IGenericRepository<T> where T : class
     {
-        Task<T?> GetByIdAsync(object id);
+        Task<T?> GetByIdAsync(object id, CancellationToken cancellationToken = default);
 
         //IEnumerable là một tập hợp các phần tử có thể được lặp qua
         //chỉ cho phép ĐỌC (Read-only), Lazy Loading (Thực thi trễ)
@@ -23,9 +23,9 @@ namespace RestaurantOrderTracking.Domain.Interface.Repository
         Task AddAsync(T entity);
 
         // Cập nhật (EF Core chỉ đánh dấu trạng thái là Modified, không cần async)
-        void Update(T entity);
+        void Update(T entity, CancellationToken cancellationToken = default);
 
         //Chỉ là đánh dấu trạng thái trong bộ nhớ RAM (Change Tracker) nên chạy cực nhanh, dùng void là chuẩn xác.
-        void Delete(T entity);
+        void Delete(T entity, CancellationToken cancellationToken = default);
     }
 }

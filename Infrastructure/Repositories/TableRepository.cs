@@ -14,22 +14,19 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
         {
         }
 
-        public async Task<(IEnumerable<Table>, int totalCount)> GetByIdAsync(Guid id, int pageIndex, int pageSize)
+        public async Task<Table>GetByIdAsync(Guid id)
         {
-            var query = _dbSet.AsQueryable();
+            var query = _dbSet.Include(t => t.Area)
+                                .Include(t => t.Orders)
+                                .AsQueryable();
             query = query.Where(t => t.Id == id);
-            var totalCount = await query.CountAsync();
-            var items = await query
-                .OrderByDescending(t => t.CreatedAt)
-                .Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-            return (items, totalCount);
+            var table = await query.FirstOrDefaultAsync();
+            return table;
         }
 
         public async Task<(IEnumerable<Table>, int totalCount)> GetPagedTablesAsync(string? keyword, int pageIndex, int pageSize)
         {
-            var query = _dbSet.AsQueryable();
+            var query = _dbSet.Include(t => t.Area).AsQueryable();
             if (!string.IsNullOrEmpty(keyword))
             {
                 query = query.Where(t => t.TableNumber.Contains(keyword));

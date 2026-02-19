@@ -26,7 +26,7 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
             // Lưu ý: Chưa gọi SaveChanges() ở đây. UnitOfWork sẽ lo việc đó.
         }
 
-        public virtual void Delete(T entity)
+        public virtual void Delete(T entity, CancellationToken cancellationToken = default)
         {
             // Kiểm tra: Nếu object này đang "lạ hoắc" với EF Core (Detached)
             if (_context.Entry(entity).State == EntityState.Detached)
@@ -37,6 +37,8 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
             // Đánh dấu trạng thái là "Đã Xóa" (Deleted)
             _dbSet.Remove(entity);
         }
+
+        
 
         public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
@@ -53,14 +55,14 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
             return await _dbSet.AsNoTracking().ToListAsync();
         }
 
-        public virtual async Task<T?> GetByIdAsync(object id)
+        public virtual async Task<T?> GetByIdAsync(object id, CancellationToken cancellationToken = default)
         {
             return await _dbSet.FindAsync(id);
         }
 
         //Khi dữ liệu từ WebAPI (JSON) gửi lên, nó là một object mới tinh trong RAM, EF Core chưa hề biết đến nó (gọi là trạng thái Detached).
         //Attach giúp EF Core nhận diện: "À, đây là dữ liệu thuộc về Database, hãy quản lý nó".
-        public virtual void Update(T entity)
+        public virtual void Update(T entity, CancellationToken cancellationToken = default)
         {
             // Attach entity vào DbSet nếu nó đang ở trạng thái Detached
             _dbSet.Attach(entity);

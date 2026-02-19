@@ -21,7 +21,7 @@ namespace Application.Feature.Tables.Commands.Create
             var table = new RestaurantOrderTracking.Domain.Entities.Table(request.TableNumber, request.AreaId, qrCode: request.QRCode);
             await _tableRepository.AddAsync(table);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result<Guid>.Success(table.Id);
+            return Result<Guid>.Success("Table created successfully", table.Id);
         }
     }
 }
