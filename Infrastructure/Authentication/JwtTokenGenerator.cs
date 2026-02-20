@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using RestaurantOrderTracking.Domain.Entities;
 using RestaurantOrderTracking.Domain.Interface;
@@ -14,6 +15,7 @@ namespace RestaurantOrderTracking.Infrastructure.Authentication
     public class JwtTokenGenerator : IJwtTokenGenerator
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<JwtTokenGenerator> _logger;
 
         public JwtTokenGenerator(IConfiguration configuration)
         {
@@ -50,6 +52,11 @@ namespace RestaurantOrderTracking.Infrastructure.Authentication
                 Audience = jwtSettings["Audience"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
+            if(tokenDecriptor.Expires == null)
+            {
+                _logger.LogError("Token expiry time is not set.");
+                throw new InvalidOperationException("Token expiry time is not set.");
+            }
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDecriptor);
             return tokenHandler.WriteToken(token);  

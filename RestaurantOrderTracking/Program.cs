@@ -21,6 +21,7 @@ namespace WebApi
             // Load .env file for environment variables
             DotNetEnv.Env.Load();
             var builder = WebApplication.CreateBuilder(args);
+            builder.Configuration.AddEnvironmentVariables();
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy(AppConstants.Cors.AllowAll, policy =>
@@ -59,21 +60,20 @@ namespace WebApi
             })
 .AddJwtBearer(options =>
 {
-    // ... (Phần TokenValidationParameters giữ nguyên) ...
+    //TokenValidationParameters
     var jwtSettings = builder.Configuration.GetSection(AppConstants.Jwt.Section);
    options.TokenValidationParameters = new TokenValidationParameters
    {
-       // ... giữ nguyên code cũ của bạn
-       ValidateIssuer = true,
-       ValidateAudience = true,
-       ValidateLifetime = true,
-       ValidateIssuerSigningKey = true,
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
          ValidIssuer = jwtSettings[AppConstants.Jwt.Issuer],
          ValidAudience = jwtSettings[AppConstants.Jwt.Audience],
          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings[AppConstants.Jwt.Secret]))
    };
 
-    // 👇 THÊM ĐOẠN NÀY ĐỂ CUSTOM TRẢ VỀ JSON CHO 401 & 403
+    //CUSTOM TRẢ VỀ JSON CHO 401 & 403
    options.Events = new JwtBearerEvents
    {
        // 1. Xử lý khi chưa đăng nhập (401 Unauthorized)

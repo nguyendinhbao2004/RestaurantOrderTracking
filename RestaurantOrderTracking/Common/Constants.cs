@@ -34,6 +34,7 @@ namespace WebApi.Common
             public const string Issuer = "Issuer";
             public const string Audience = "Audience";
             public const string Secret = "SecretKey";
+            public const string ExpiryMinutes = "ExpiryMinutes";
         }
 
         /// <summary>Swagger / OpenAPI related constants.</summary>

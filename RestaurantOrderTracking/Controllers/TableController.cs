@@ -37,7 +37,7 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         /// <response code="400">If the request parameters are invalid.</response>
         /// <response code="500">If an internal server error occurs.</response>
         [HttpGet]
-        public async Task<IActionResult> GetAllTables(string? Keyword, int PageIndex, int PageSize)
+        public async Task<IActionResult> GetAllTables(string? Keyword, int PageIndex = 1, int PageSize = 10)
         {
             var query = new GetAllTableQueries(Keyword, PageIndex, PageSize);
             var result = await _mediator.Send(query);

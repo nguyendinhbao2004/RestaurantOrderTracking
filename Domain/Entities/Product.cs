@@ -22,6 +22,7 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         public Product(int categoryId, string name, decimal price, bool isActive = true, string? description = null, string? imageUrl = null)
         {
+            Id = Guid.NewGuid();
             CategoryId = categoryId;
             Name = name;
             Price = price;
