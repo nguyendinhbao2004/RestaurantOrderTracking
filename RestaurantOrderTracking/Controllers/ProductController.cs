@@ -1,5 +1,7 @@
 using Application.Feature.Product.Commands.Create;
 using Application.Feature.Product.Queries.GetAllProduct;
+using Application.Feature.Products.Commands.Update.UpdateInfo;
+using Application.Feature.Products.Commands.Update.UpdateStatus;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -52,6 +54,36 @@ namespace RestaurantOrderTracking.Controllers
         {
             var result = await _mediator.Send(command);
             if(result.Succeeded)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result.Errors);
+        }
+
+        /// <summary>
+        /// Updates the information of an existing product.
+        /// </summary>
+        /// <param name="command">The command containing updated product information.</param>
+        /// <returns>The result of the product update operation.</returns>
+        /// <response code="200">If the product is updated successfully.</response>
+        /// <response code="400">If the product update fails due to validation errors or if the product is not found.</response>
+        [HttpPut("Update-Info")]
+        public async Task<IActionResult> UpdateProduct([FromBody]UpdateInfoProductCommand command)
+        {
+            var result = await _mediator.Send(command);
+            if (result.Succeeded)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result.Errors);
+        }
+
+        [HttpPut("Update-Status/{id}")]
+        public async Task<IActionResult> UpdateProductStatus(Guid id)
+        {
+            var command = new UpdateStatusProductCommand(id);
+            var result = await _mediator.Send(command);
+            if (result.Succeeded)
             {
                 return Ok(result);
             }

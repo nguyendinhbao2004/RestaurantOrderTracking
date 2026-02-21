@@ -31,15 +31,10 @@ namespace RestaurantOrderTracking.Domain.Entities
             ImageUrl = imageUrl;
         }
 
-        public void UpdateInfo(string name, decimal price, bool isActive)
+        public void UpdateInfo(string name, decimal price, string? description)
         {
             Name = name;
             Price = price;
-            IsActive = isActive;
-        }
-
-        public void UpdateDescription(string? description)
-        {
             Description = description;
         }
 

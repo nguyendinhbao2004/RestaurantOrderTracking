@@ -23,7 +23,7 @@ namespace Application.Feature.Tables.Queries.GetById
                 return Result<TableDetailResponse>.Failure($"Table with ID {request.Id} not found.");
             }
             var tableDetailResponse = _mapper.Map<TableDetailResponse>(table);
-            return Result<TableDetailResponse>.Success(tableDetailResponse);
+            return Result<TableDetailResponse>.Success("Get Table Detail Successfully", tableDetailResponse);
         }
     }
 }

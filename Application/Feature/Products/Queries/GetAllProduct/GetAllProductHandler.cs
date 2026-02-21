@@ -19,7 +19,7 @@ namespace Application.Feature.Product.Queries.GetAllProduct
         {
             var (products, totalCount) = await _productRepository.GetPagedProductsAsync(request.Keyword, request.PageIndex, request.PageSize);
             var productResponses = _mapper.Map<List<ProductResponse>>(products);
-            return PagedResult<ProductResponse>.Create(productResponses, totalCount, request.PageIndex, request.PageSize);
+            return new PagedResult<ProductResponse>(productResponses, totalCount, request.PageIndex, request.PageSize, "Get Product Successfully");
         }
     }
 }

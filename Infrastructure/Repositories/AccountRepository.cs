@@ -32,6 +32,23 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
             return await Task.FromResult(isValid);
         }
 
+        public async Task<(IEnumerable<Account> Accounts, int TotalCount)> GetPageAccountAsync(string? keyword, int pageIndex, int pageSize)
+        {
+            var query = _dbSet.Include(a => a.Role).AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                query = query.Where(a => a.FullName.Contains(keyword) || a.UserName.Contains(keyword));
+            }
+            var items = await query
+                .OrderByDescending(a => a.CreatedAt)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            var totalCount = await query.CountAsync();
+            return (items, totalCount);
+        }
+
         public async Task<Account?> GetByUserNameAsync(string userName)
         {
             return await _dbSet.Include(a => a.Role).FirstOrDefaultAsync(a => a.UserName == userName);

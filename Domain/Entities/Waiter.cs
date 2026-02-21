@@ -19,13 +19,9 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         protected Waiter() { }
 
-        public Waiter(Guid accountId, Guid assignedAreaId, string skillLevel, bool isAvailable, int maxTables)
+        public Waiter(Guid accountId)
         {
             AccountId = accountId;
-            AssignedAreaId = assignedAreaId;
-            SkillLevel = skillLevel;
-            IsAvailable = isAvailable;
-            MaxTables = maxTables;
         }
 
         public void UpdateWaiter(Guid assignedAreaId, string skillLevel, bool isAvailable, int maxTables)

@@ -17,13 +17,9 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         protected Chef() { }
 
-        public Chef(Guid accountId, string specialty, string skillLevel, bool isAvailable, string station)
+        public Chef(Guid accountId)
         {
             AccountId = accountId;
-            Specialty = specialty;
-            SkillLevel = skillLevel;
-            IsAvailable = isAvailable;
-            Station = station;
         }
 
         public void UpdateChef(string specialty, string skillLevel, bool isAvailable, string station)

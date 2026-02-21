@@ -2,6 +2,11 @@
 
 namespace RestaurantOrderTracking.Domain.Entities
 {
+    // 1."Admin", "System administrator with full access"
+    // 2.Manager", "Restaurant manager with management access"
+    // 3."Chef", "Kitchen staff responsible for cooking"
+    // 4. "Waiter", "Service staff responsible for serving customers"
+    // 5. "Cashier", "Staff responsible for handling payments"
     public class Role
     {
         public int Id { get; private set; }

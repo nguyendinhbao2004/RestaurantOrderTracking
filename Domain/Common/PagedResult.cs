@@ -24,6 +24,14 @@ namespace RestaurantOrderTracking.Domain.Common
             TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
         }
 
+        public PagedResult(List<T> data, int pageNumber, int pageSize, int totalRecords, string message) : base(true, message, null, data)
+        {
+            PageNumber = pageNumber;
+            PageSize = pageSize;
+            TotalRecords = totalRecords;
+            TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+        }
+
         // Factory method: Nhận vào List<T>
         public static PagedResult<T> Create(List<T> data, int totalRecords, int pageNumber, int pageSize)
         {
