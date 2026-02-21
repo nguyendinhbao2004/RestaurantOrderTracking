@@ -1,5 +1,7 @@
 RestaurantOrderTracking (ROT) System
+
 AI-Powered Fulfillment & Management Platform for Modern F&B
+
 📌 Project Overview
 RestaurantOrderTracking (ROT) is a next-generation management ecosystem designed to streamline restaurant operations. By leveraging .NET 10 for high-performance processing and Voice AI, ROT allows staff (Chefs, Waiters, and Cashiers) to interact with the system hands-free, minimizing latency in high-pressure environments.
 
