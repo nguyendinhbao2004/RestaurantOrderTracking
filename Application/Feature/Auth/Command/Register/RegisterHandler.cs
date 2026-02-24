@@ -27,7 +27,7 @@ namespace RestaurantOrderTracking.Application.Feature.Auth.Command.Register
                 return Result<string>.Failure("User is already exist.");
             }
             var hassedPassword = _accountRepo.HashPassword(request.Password);
-            var account = new Account(request.RoleId, request.UserName, request.FullName, request.Phone, hassedPassword);
+            var account = new Account(request.RoleId, request.UserName, request.FullName, request.Phone, hassedPassword, request.Image);
             await _accountRepo.AddAsync(account);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

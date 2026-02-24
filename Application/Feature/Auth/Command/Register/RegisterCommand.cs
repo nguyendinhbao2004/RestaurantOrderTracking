@@ -12,6 +12,7 @@ namespace RestaurantOrderTracking.Application.Feature.Auth.Command.Register
         public string FullName { get; set; }
         public string Phone { get; set; }
         public string Password { get; set; }
+        public string Image { get; set; }
         public int RoleId { get; set; }
     }
 }

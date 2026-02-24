@@ -70,6 +70,7 @@ namespace RestaurantOrderTracking.Infrastructure.Data
 
                 entity.Property(a => a.PasswordHash)
                     .IsRequired();
+                entity.Property(a => a.Image);
             });
 
             // ==================== REFRESH TOKEN ENTITY ====================
@@ -150,10 +151,6 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                     .WithMany(a => a.Waiters)
                     .HasForeignKey(w => w.AssignedAreaId)
                     .OnDelete(DeleteBehavior.Restrict);
-
-                entity.Property(w => w.SkillLevel)
-                    .IsRequired()
-                    .HasMaxLength(50);
 
                 entity.HasIndex(w => w.AccountId)
                     .IsUnique();

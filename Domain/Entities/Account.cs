@@ -28,15 +28,18 @@ namespace RestaurantOrderTracking.Domain.Entities
         public bool IsActive { get; private set; }
         public bool IsWorking { get; private set; }
 
+        public string Image { get; private set; }
+
         protected Account() { }
 
-        public Account(int roleId, string userName, string fullName, string phone, string passwordHash, bool isActive = true, bool isWorking = true)
+        public Account(int roleId, string userName, string fullName, string phone, string passwordHash, string image, bool isActive = true, bool isWorking = true)
         {
             RoleId = roleId;
             UserName = userName;
             FullName = fullName;
             Phone = phone;
             PasswordHash = passwordHash;
+            Image = image;
             IsActive = isActive;
             IsWorking = isWorking;
         }
