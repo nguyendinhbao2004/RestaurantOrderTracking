@@ -76,24 +76,23 @@ namespace RestaurantOrderTracking.Infrastructure.Data
         {
             if (await _context.Categories.AnyAsync())
             {
-                _logger.LogInformation("Categories already seeded, skipping...");
+                _logger.LogInformation("Dữ liệu danh mục đã tồn tại, bỏ qua bước khởi tạo...");
                 return;
             }
 
             var categories = new List<Category>
             {
-                new Category(1, "Appetizers", "Light dishes to start your meal"),
-                new Category(2, "Main Course", "Hearty main dishes"),
-                new Category(3, "Desserts", "Sweet treats to end your meal"),
-                new Category(4, "Beverages", "Refreshing drinks"),
-                new Category(5, "Soups", "Warm and comforting soups"),
-                new Category(6, "Salads", "Fresh and healthy salads"),
-                new Category(7, "Specials", "Chef's special recommendations")
+                new Category(1, "Món khai vị", "Các món ăn nhẹ để bắt đầu bữa ăn"),
+                new Category(2, "Món chính", "Các món ăn chính đậm đà và no bụng"),
+                new Category(3, "Tráng miệng", "Món ngọt kết thúc bữa ăn tuyệt vời"),
+                new Category(4, "Đồ uống", "Các loại nước giải khát tươi mát"),
+                new Category(5, "Súp & Canh", "Các món súp ấm nóng và bổ dưỡng"),
+                new Category(6, "Salad", "Rau trộn tươi ngon và lành mạnh"),
+                new Category(7, "Món đặc biệt", "Những gợi ý đặc biệt từ đầu bếp trưởng")
             };
-
             await _context.Categories.AddRangeAsync(categories);
             await _context.SaveChangesAsync();
-            _logger.LogInformation("Seeded {Count} categories.", categories.Count);
+            _logger.LogInformation("Đã khởi tạo thành công {Count} danh mục.", categories.Count);
         }
 
         private async Task SeedAreasAsync()
@@ -167,65 +166,65 @@ namespace RestaurantOrderTracking.Infrastructure.Data
         {
             if (await _context.Products.AnyAsync())
             {
-                _logger.LogInformation("Products already seeded, skipping...");
+                _logger.LogInformation("Dữ liệu sản phẩm đã tồn tại, bỏ qua bước khởi tạo...");
                 return;
             }
 
             var products = new List<Product>
             {
-                // Appetizers (CategoryId: 1)
-                new Product(1, "Spring Rolls", 45000m, true, "Crispy vegetable spring rolls"),
-                new Product(1, "Crispy Wontons", 38000m, true, "Golden fried wontons with dipping sauce"),
-                new Product(1, "Garlic Bread", 25000m, true, "Toasted bread with garlic butter"),
-                new Product(1, "Chicken Wings", 65000m, true, "Spicy buffalo chicken wings"),
+                // Món khai vị (CategoryId: 1)
+                new Product(1, "Chả giò rế", 45000m, true, "Chả giò rau củ chiên giòn rụm"),
+                new Product(1, "Hoành thánh chiên", 38000m, true, "Hoành thánh vàng giòn kèm nước chấm đặc biệt"),
+                new Product(1, "Bánh mì bơ tỏi", 25000m, true, "Bánh mì nướng bơ tỏi thơm lừng"),
+                new Product(1, "Cánh gà Buffalo", 65000m, true, "Cánh gà sốt cay kiểu Buffalo"),
 
-                // Main Course (CategoryId: 2)
-                new Product(2, "Grilled Salmon", 185000m, true, "Atlantic salmon with herbs"),
-                new Product(2, "Beef Steak", 220000m, true, "Premium beef steak cooked to perfection"),
-                new Product(2, "Chicken Parmesan", 145000m, true, "Breaded chicken with marinara sauce"),
-                new Product(2, "Fried Rice", 55000m, true, "Wok-fried rice with vegetables"),
-                new Product(2, "Pad Thai", 75000m, true, "Thai stir-fried rice noodles"),
-                new Product(2, "Pho Bo", 65000m, true, "Vietnamese beef noodle soup"),
+                // Món chính (CategoryId: 2)
+                new Product(2, "Cá hồi nướng", 185000m, true, "Cá hồi Đại Tây Dương nướng thảo mộc"),
+                new Product(2, "Bít tết bò", 220000m, true, "Bò thượng hạng chế biến theo yêu cầu"),
+                new Product(2, "Gà sốt Parmesan", 145000m, true, "Ức gà chiên xù kèm sốt cà chua và phô mai"),
+                new Product(2, "Cơm chiên rau củ", 55000m, true, "Cơm chiên tơi xốp cùng rau củ tươi"),
+                new Product(2, "Pad Thai", 75000m, true, "Hủ tiếu xào kiểu Thái đặc trưng"),
+                new Product(2, "Phở bò truyền thống", 65000m, true, "Phở bò với nước dùng đậm đà"),
 
-                // Desserts (CategoryId: 3)
-                new Product(3, "Chocolate Cake", 55000m, true, "Rich chocolate layer cake"),
-                new Product(3, "Ice Cream Sundae", 45000m, true, "Vanilla ice cream with toppings"),
-                new Product(3, "Tiramisu", 65000m, true, "Italian coffee-flavored dessert"),
-                new Product(3, "Fresh Fruit Platter", 75000m, true, "Seasonal fresh fruits"),
+                // Tráng miệng (CategoryId: 3)
+                new Product(3, "Bánh kem Chocolate", 55000m, true, "Bánh chocolate tầng đậm đà"),
+                new Product(3, "Kem Sundae", 45000m, true, "Kem vani kèm các loại topping"),
+                new Product(3, "Bánh Tiramisu", 65000m, true, "Bánh hương vị cà phê kiểu Ý"),
+                new Product(3, "Đĩa trái cây tươi", 75000m, true, "Trái cây tươi tổng hợp theo mùa"),
 
-                // Beverages (CategoryId: 4)
-                new Product(4, "Fresh Orange Juice", 35000m, true, "Freshly squeezed orange juice"),
-                new Product(4, "Vietnamese Coffee", 28000m, true, "Traditional ca phe sua da"),
-                new Product(4, "Green Tea", 20000m, true, "Hot or iced green tea"),
-                new Product(4, "Coca Cola", 18000m, true, "Chilled soft drink"),
-                new Product(4, "Smoothie", 45000m, true, "Mixed fruit smoothie"),
+                // Đồ uống (CategoryId: 4)
+                new Product(4, "Nước cam ép", 35000m, true, "Nước cam tươi nguyên chất vắt trong ngày"),
+                new Product(4, "Cà phê sữa đá", 28000m, true, "Cà phê sữa đá truyền thống Việt Nam"),
+                new Product(4, "Trà xanh", 20000m, true, "Trà xanh nóng hoặc đá"),
+                new Product(4, "Coca Cola", 18000m, true, "Nước giải khát có gas ướp lạnh"),
+                new Product(4, "Sinh tố hỗn hợp", 45000m, true, "Sinh tố trái cây tươi xay nhuyễn"),
 
-                // Soups (CategoryId: 5)
-                new Product(5, "Tom Yum Soup", 55000m, true, "Spicy Thai shrimp soup"),
-                new Product(5, "Mushroom Soup", 45000m, true, "Creamy mushroom soup"),
-                new Product(5, "Chicken Soup", 40000m, true, "Classic chicken noodle soup"),
+                // Súp & Canh (CategoryId: 5)
+                new Product(5, "Súp Tom Yum", 55000m, true, "Súp tôm cay nồng kiểu Thái"),
+                new Product(5, "Súp nấm kem", 45000m, true, "Súp nấm kem béo ngậy"),
+                new Product(5, "Súp gà ngô non", 40000m, true, "Súp gà truyền thống nấu với ngô non"),
 
-                // Salads (CategoryId: 6)
-                new Product(6, "Caesar Salad", 65000m, true, "Romaine lettuce with caesar dressing"),
-                new Product(6, "Greek Salad", 55000m, true, "Mediterranean salad with feta"),
-                new Product(6, "Garden Salad", 45000m, true, "Fresh mixed greens"),
+                // Salad (CategoryId: 6)
+                new Product(6, "Salad Caesar", 65000m, true, "Xà lách Romaine kèm sốt Caesar đặc trưng"),
+                new Product(6, "Salad Hy Lạp", 55000m, true, "Salad Địa Trung Hải với phô mai Feta"),
+                new Product(6, "Salad vườn", 45000m, true, "Các loại rau xanh hỗn hợp tươi mới"),
 
-                // Specials (CategoryId: 7)
-                new Product(7, "Chef's Special", 195000m, true, "Daily special dish"),
-                new Product(7, "Seafood Platter", 350000m, true, "Assorted premium seafood")
-            };
+                // Món đặc biệt (CategoryId: 7)
+                new Product(7, "Món đặc sản trong ngày", 195000m, true, "Món ăn đặc biệt do đầu bếp lựa chọn"),
+                new Product(7, "Khay hải sản cao cấp", 350000m, true, "Hải sản tươi sống tổng hợp chọn lọc")
+                };
 
             await _context.Products.AddRangeAsync(products);
             await _context.SaveChangesAsync();
-            _logger.LogInformation("Seeded {Count} products.", products.Count);
+            _logger.LogInformation("Đã khởi tạo thành công {Count} sản phẩm.", products.Count);
         }
     }
 
-    /// <summary>
-    /// Extension methods for DatabaseSeeder registration and usage.
-    /// </summary>
-    public static class DatabaseSeederExtensions
-    {
+        /// <summary>
+        /// Extension methods for DatabaseSeeder registration and usage.
+        /// </summary>
+        public static class DatabaseSeederExtensions
+        {
         /// <summary>
         /// Seeds the database using the DatabaseSeeder service.
         /// </summary>
