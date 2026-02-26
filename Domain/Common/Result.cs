@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace RestaurantOrderTracking.Domain.Common
 {
     public class Result 
     {
+        [JsonPropertyOrder(1)]
         public bool Succeeded { get; set; }
+        [JsonPropertyOrder(2)]
         public string Message { get; set; }
+        [JsonPropertyOrder(99)]
         public List<string> Errors { get; set; }
 
         public Result()
@@ -46,6 +50,7 @@ namespace RestaurantOrderTracking.Domain.Common
 
     public class Result<T> : Result
     {
+        [JsonPropertyOrder(3)]
         public T Data { get; private set; }
         public Result(bool succeeded, string message, IEnumerable<string> errors, T data)
             : base(succeeded, message, errors)
