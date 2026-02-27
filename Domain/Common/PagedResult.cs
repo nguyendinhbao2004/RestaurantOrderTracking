@@ -4,32 +4,58 @@ using System.Text;
 
 namespace RestaurantOrderTracking.Domain.Common
 {
-    public class PagedResult<T> : Result<List<T>>
+    public class PaginationInfo
     {
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
         public int TotalPages { get; set; }
         public int TotalRecords { get; set; }
+        public bool HasPreviousPage { get; set; }
+        public bool HasNextPage { get; set; }
+    }
 
-        public bool HasPreviousPage => PageNumber > 1;
-        public bool HasNextPage => PageNumber < TotalPages;
-        //Hai biến tiện ích (helper). Frontend chỉ cần check if (HasNextPage == false) thì ẩn nút "Next" đi.
+    public class MetaData
+    {
+        public PaginationInfo Pagination { get; set; } = null!;
+    }
 
+    public class PagedResult<T> : Result<List<T>>
+    {
+        [System.Text.Json.Serialization.JsonPropertyOrder(4)]
+        public MetaData Meta { get; set; }
 
-        public PagedResult(List<T> data, int pageNumber, int pageSize, int totalRecords) : base(true, string.Empty, null, data)
+        public PagedResult(List<T> data, int pageNumber, int pageSize, int totalRecords) : base(true, string.Empty, null!, data)
         {
-            PageNumber = pageNumber;
-            PageSize = pageSize;
-            TotalRecords = totalRecords;
-            TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+            int totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+            Meta = new MetaData
+            {
+                Pagination = new PaginationInfo
+                {
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    TotalPages = totalPages,
+                    TotalRecords = totalRecords,
+                    HasPreviousPage = pageNumber > 1,
+                    HasNextPage = pageNumber < totalPages
+                }
+            };
         }
 
-        public PagedResult(List<T> data, int pageNumber, int pageSize, int totalRecords, string message) : base(true, message, null, data)
+        public PagedResult(List<T> data, int pageNumber, int pageSize, int totalRecords, string message) : base(true, message, null!, data)
         {
-            PageNumber = pageNumber;
-            PageSize = pageSize;
-            TotalRecords = totalRecords;
-            TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+            int totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+            Meta = new MetaData
+            {
+                Pagination = new PaginationInfo
+                {
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    TotalPages = totalPages,
+                    TotalRecords = totalRecords,
+                    HasPreviousPage = pageNumber > 1,
+                    HasNextPage = pageNumber < totalPages
+                }
+            };
         }
 
         // Factory method: Nhận vào List<T>
