@@ -36,6 +36,7 @@ namespace RestaurantOrderTracking.Infrastructure
             services.AddScoped<ITableRepository, TableRepository>();
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IOrderRepository, OrderRepository>();
 
             // Thêm các repository cụ thể khác nếu cần
             return services;
