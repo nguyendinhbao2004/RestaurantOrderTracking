@@ -32,7 +32,7 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         protected Account() { }
 
-        public Account(int roleId, string userName, string fullName, string phone, string passwordHash, string image, bool isActive = true, bool isWorking = true)
+        public Account(int roleId, string userName, string fullName, string phone, string passwordHash, string image)
         {
             RoleId = roleId;
             UserName = userName;
@@ -40,8 +40,8 @@ namespace RestaurantOrderTracking.Domain.Entities
             Phone = phone;
             PasswordHash = passwordHash;
             Image = image;
-            IsActive = isActive;
-            IsWorking = isWorking;
+            IsActive = true;
+            IsWorking = false;
         }
 
         public void UpdateInfo(string fullName, string phone)

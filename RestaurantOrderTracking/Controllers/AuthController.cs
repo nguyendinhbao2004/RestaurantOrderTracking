@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using Application.Feature.Auth.Command.Register.RegisterWaiter;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -60,6 +61,33 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         /// <response code="500">Internal Server Error</response>
         [HttpPost("CreateAccount")]
         public async Task<IActionResult> CreateAccount([FromBody] RegisterCommand command)
+        {
+            var result = await _mediator.Send(command);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Creates a new waiter account using the specified registration details.
+        /// </summary>
+        /// <remarks>
+        /// This is an API endpoint to create a new waiter account in the system.
+        /// <br/>
+        /// Locallhost:5015/api/Auth/CreateWaiter
+        /// </remarks>  
+        /// <param name="command"></param>
+        /// <returns>
+        /// An IActionResult that represents the result of the waiter account creation operation. Returns 200 OK with the
+        /// result if successful; otherwise, returns 400 Bad Request with error details.</returns>
+        /// <returns>Message: Waiter Register Successfully</returns>
+        /// <response code="200">Waiter Register Successfully</response>
+        /// <response code="400">Bad Request</response>
+        /// <response code="500">Internal Server Error</response>
+        [HttpPost("CreateWaiter")]
+        public async Task<IActionResult> CreateWaiter([FromBody] RegisterWaiterCommand command)
         {
             var result = await _mediator.Send(command);
             if (!result.Succeeded)

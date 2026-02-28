@@ -17,9 +17,14 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         protected Chef() { }
 
-        public Chef(Guid accountId)
+        public Chef(Guid accountId, string specialty, string skillLevel, string station)
         {
+            Id = Guid.NewGuid();
             AccountId = accountId;
+            Specialty = specialty;
+            SkillLevel = skillLevel;
+            Station = station;
+            IsAvailable = true; // Mặc định khi tạo mới, đầu bếp sẽ có trạng thái sẵn sàng làm việc
         }
 
         public void UpdateChef(string specialty, string skillLevel, bool isAvailable, string station)

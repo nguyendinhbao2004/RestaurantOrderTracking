@@ -17,9 +17,13 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         protected Waiter() { }
 
-        public Waiter(Guid accountId)
+        public Waiter(Guid accountId, Guid? assignedAreaId )
         {
+            Id = Guid.NewGuid();   
             AccountId = accountId;
+            AssignedAreaId = assignedAreaId;
+            IsAvailable = true; // Mặc định khi tạo mới, nhân viên phục vụ sẽ
+            MaxTables = 5; // Mặc định số bàn tối đa mà nhân viên phục vụ có thể quản lý
         }
 
         public void UpdateWaiter(Guid assignedAreaId, string skillLevel, bool isAvailable, int maxTables)
