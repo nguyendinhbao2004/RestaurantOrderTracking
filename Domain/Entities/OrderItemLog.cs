@@ -14,6 +14,7 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         public OrderItemStatus PreviousStatus { get; private set; }
         public OrderItemStatus NewStatus { get; private set; }
+        public string Change_Source { get; private set; }
         public string? Notes { get; private set; }
 
         protected OrderItemLog() { }

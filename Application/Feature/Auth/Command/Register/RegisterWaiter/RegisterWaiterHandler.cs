@@ -43,7 +43,13 @@ namespace Application.Feature.Auth.Command.Register.RegisterWaiter
 
                 // 3. Process Waiter Creation
                 // Note: If Waiter depends on Account.Id, ensure your repository/DB handles identity generation
-                var newWaiter = new Waiter(newAccount.Id, request.AreaId);
+                var newWaiter = new Waiter(
+                    accountId: newAccount.Id,
+                    assignedAreaId: request.AreaId,
+                    skillLevel: "Beginner",
+                    isAvailable: true,
+                    maxTables: 5
+                    );
                 await _waiterRepository.AddAsync(newWaiter);
 
                 // 4. Atomic Save

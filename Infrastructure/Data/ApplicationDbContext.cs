@@ -4,6 +4,7 @@ using RestaurantOrderTracking.Domain.Entities;
 
 namespace RestaurantOrderTracking.Infrastructure.Data
 {
+    // FIX: Inherit only from IdentityDbContext<Account> (which itself inherits from DbContext)
     public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
@@ -34,29 +35,25 @@ namespace RestaurantOrderTracking.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // ==================== ROLE ENTITY ====================
+            // ==================== ROLE ====================
             modelBuilder.Entity<Role>(entity =>
             {
                 entity.HasKey(r => r.Id);
-                
                 entity.Property(r => r.Name)
                     .IsRequired()
                     .HasMaxLength(100);
-
                 entity.Property(r => r.Description)
                     .HasMaxLength(500);
             });
 
-            // ==================== ACCOUNT ENTITY ====================
+            // ==================== ACCOUNT ====================
             modelBuilder.Entity<Account>(entity =>
             {
-                // Foreign Key and Navigation
                 entity.HasOne(a => a.Role)
                     .WithMany(r => r.Accounts)
                     .HasForeignKey(a => a.RoleId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                // Properties
                 entity.Property(a => a.UserName)
                     .IsRequired()
                     .HasMaxLength(100);
@@ -70,76 +67,30 @@ namespace RestaurantOrderTracking.Infrastructure.Data
 
                 entity.Property(a => a.PasswordHash)
                     .IsRequired();
-                entity.Property(a => a.Image);
-            });
 
-            // ==================== REFRESH TOKEN ENTITY ====================
-            modelBuilder.Entity<RefreshToken>(entity =>
-            {
-                entity.HasOne(rt => rt.User)
-                    .WithMany(a => a.RefreshTokens)
-                    .HasForeignKey(rt => rt.UserId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.Property(rt => rt.Token)
-                    .IsRequired();
-
-                entity.Property(rt => rt.JwtId)
-                    .IsRequired();
-            });
-
-            // ==================== WORK SCHEDULE ENTITY ====================
-            modelBuilder.Entity<WorkSchedule>(entity =>
-            {
-                entity.HasOne(ws => ws.Account)
-                    .WithMany(a => a.WorkSchedules)
-                    .HasForeignKey(ws => ws.AccountId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.Property(ws => ws.ShiftName)
+                entity.Property(a => a.IsActive)
                     .IsRequired()
-                    .HasMaxLength(100);
+                    .HasDefaultValue(true);
 
-                entity.Property(ws => ws.Note)
+                entity.Property(a => a.IsWorking)
+                    .IsRequired()
+                    .HasDefaultValue(false);
+
+                entity.Property(a => a.Image)
                     .HasMaxLength(500);
             });
 
-            // ==================== CHEF ENTITY ====================
-            modelBuilder.Entity<Chef>(entity =>
-            {
-                entity.HasOne(c => c.Account)
-                    .WithMany()
-                    .HasForeignKey(c => c.AccountId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.Property(c => c.Specialty)
-                    .IsRequired()
-                    .HasMaxLength(100);
-
-                entity.Property(c => c.SkillLevel)
-                    .IsRequired()
-                    .HasMaxLength(50);
-
-                entity.Property(c => c.Station)
-                    .IsRequired()
-                    .HasMaxLength(100);
-
-                entity.HasIndex(c => c.AccountId)
-                    .IsUnique();
-            });
-
-            // ==================== AREA ENTITY ====================
+            // ==================== AREA ====================
             modelBuilder.Entity<Area>(entity =>
             {
                 entity.Property(a => a.Name)
                     .IsRequired()
                     .HasMaxLength(100);
-
                 entity.Property(a => a.Description)
                     .HasMaxLength(500);
             });
 
-            // ==================== WAITER ENTITY ====================
+            // ==================== WAITER ====================
             modelBuilder.Entity<Waiter>(entity =>
             {
                 entity.HasOne(w => w.Account)
@@ -152,11 +103,21 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                     .HasForeignKey(w => w.AssignedAreaId)
                     .OnDelete(DeleteBehavior.Restrict);
 
+                entity.Property(w => w.SkillLevel)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(w => w.IsAvailable)
+                    .IsRequired();
+
+                entity.Property(w => w.MaxTables)
+                    .IsRequired();
+
                 entity.HasIndex(w => w.AccountId)
                     .IsUnique();
             });
 
-            // ==================== TABLE ENTITY ====================
+            // ==================== TABLE ====================
             modelBuilder.Entity<Table>(entity =>
             {
                 entity.HasOne(t => t.Area)
@@ -171,12 +132,15 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                 entity.Property(t => t.QRCode)
                     .HasMaxLength(500);
 
+                entity.Property(t => t.Capacity)
+                    .IsRequired();
+
                 entity.HasIndex(t => new { t.AreaId, t.TableNumber })
                     .IsUnique()
                     .HasName("IX_Table_AreaId_TableNumber");
             });
 
-            // ==================== CATEGORY ENTITY ====================
+            // ==================== CATEGORY ====================
             modelBuilder.Entity<Category>(entity =>
             {
                 entity.HasKey(c => c.Id);
@@ -190,9 +154,13 @@ namespace RestaurantOrderTracking.Infrastructure.Data
 
                 entity.Property(c => c.ImageUrl)
                     .HasMaxLength(500);
+
+                entity.Property(c => c.IsActive)
+                    .IsRequired()
+                    .HasDefaultValue(true);
             });
 
-            // ==================== PRODUCT ENTITY ====================
+            // ==================== PRODUCT ====================
             modelBuilder.Entity<Product>(entity =>
             {
                 entity.HasOne(p => p.Category)
@@ -212,9 +180,13 @@ namespace RestaurantOrderTracking.Infrastructure.Data
 
                 entity.Property(p => p.Price)
                     .HasPrecision(18, 2);
+
+                entity.Property(p => p.IsActive)
+                    .IsRequired()
+                    .HasDefaultValue(true);
             });
 
-            // ==================== CUSTOMER ENTITY ====================
+            // ==================== CUSTOMER ====================
             modelBuilder.Entity<Customer>(entity =>
             {
                 entity.Property(c => c.Name)
@@ -230,12 +202,17 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                     .HasMaxLength(500);
             });
 
-            // ==================== ORDER ENTITY ====================
+            // ==================== ORDER ====================
             modelBuilder.Entity<Order>(entity =>
             {
                 entity.HasOne(o => o.Table)
                     .WithMany(t => t.Orders)
                     .HasForeignKey(o => o.TableId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(o => o.Account)
+                    .WithMany()
+                    .HasForeignKey(o => o.AccountId)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(o => o.Customer)
@@ -247,7 +224,7 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                     .IsRequired();
             });
 
-            // ==================== ORDER ITEM ENTITY ====================
+            // ==================== ORDER ITEM ====================
             modelBuilder.Entity<OrderItem>(entity =>
             {
                 entity.HasOne(oi => oi.Order)
@@ -277,6 +254,9 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                 entity.Property(oi => oi.Note)
                     .HasMaxLength(500);
 
+                entity.Property(oi => oi.Quantity)
+                    .IsRequired();
+
                 entity.Property(oi => oi.UnitPrice)
                     .HasPrecision(18, 2);
 
@@ -284,7 +264,7 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                     .IsRequired();
             });
 
-            // ==================== ORDER ITEM LOG ENTITY ====================
+            // ==================== ORDER ITEM LOG ====================
             modelBuilder.Entity<OrderItemLog>(entity =>
             {
                 entity.HasOne(oil => oil.OrderItem)
@@ -297,11 +277,17 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                     .HasForeignKey(oil => oil.AccountId)
                     .OnDelete(DeleteBehavior.SetNull);
 
+                entity.Property(oil => oil.PreviousStatus)
+                    .IsRequired();
+
+                entity.Property(oil => oil.NewStatus)
+                    .IsRequired();
+
                 entity.Property(oil => oil.Notes)
                     .HasMaxLength(500);
             });
 
-            // ==================== BILL ENTITY ====================
+            // ==================== BILL ====================
             modelBuilder.Entity<Bill>(entity =>
             {
                 entity.HasOne(b => b.Order)
@@ -323,11 +309,22 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                 entity.Property(b => b.FinalAmount)
                     .HasPrecision(18, 2);
 
+                entity.Property(b => b.Tax)
+                    .HasPrecision(5, 2);
+
+                entity.Property(b => b.PaymentMethod)
+                    .IsRequired();
+
+                entity.Property(b => b.Status)
+                    .IsRequired();
+
+                entity.Property(b => b.PaidAt);
+
                 entity.Property(b => b.TransactionId)
                     .HasMaxLength(100);
             });
 
-            // ==================== FEEDBACK ENTITY ====================
+            // ==================== FEEDBACK ====================
             modelBuilder.Entity<FeedBack>(entity =>
             {
                 entity.HasOne(f => f.Order)
@@ -335,11 +332,18 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                     .HasForeignKey(f => f.OrderId)
                     .OnDelete(DeleteBehavior.Cascade);
 
+                entity.Property(f => f.Rating)
+                    .IsRequired();
+
                 entity.Property(f => f.Comment)
                     .HasMaxLength(1000);
+
+                entity.Property(f => f.IsAnonymous)
+                    .IsRequired()
+                    .HasDefaultValue(false);
             });
 
-            // ==================== VOICE COMMAND ENTITY ====================
+            // ==================== VOICE COMMAND ====================
             modelBuilder.Entity<VoiceCommand>(entity =>
             {
                 entity.HasOne(vc => vc.Account)
@@ -362,11 +366,23 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                 entity.Property(vc => vc.ParsedAction)
                     .HasMaxLength(100);
 
+                entity.Property(vc => vc.ParsedTableId);
+
+                entity.Property(vc => vc.ParsedProductName)
+                    .HasMaxLength(200);
+
+                entity.Property(vc => vc.ConfidenceScore);
+
+                entity.Property(vc => vc.Status)
+                    .IsRequired();
+
+                entity.Property(vc => vc.ProcessedAt);
+
                 entity.Property(vc => vc.ErrorMessage)
                     .HasMaxLength(500);
             });
 
-            // ==================== NOTIFICATION ENTITY ====================
+            // ==================== NOTIFICATION ====================
             modelBuilder.Entity<Notification>(entity =>
             {
                 entity.HasOne(n => n.OrderItem)
@@ -388,9 +404,79 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                     .IsRequired()
                     .HasMaxLength(200);
 
+                entity.Property(n => n.Type)
+                    .IsRequired();
+
                 entity.Property(n => n.Message)
                     .IsRequired()
                     .HasMaxLength(1000);
+
+                entity.Property(n => n.IsRead)
+                    .IsRequired()
+                    .HasDefaultValue(false);
+
+                entity.Property(n => n.ReadAt);
+            });
+
+            // ==================== REFRESH TOKEN ====================
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasOne(rt => rt.User)
+                    .WithMany(a => a.RefreshTokens)
+                    .HasForeignKey(rt => rt.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(rt => rt.Token)
+                    .IsRequired();
+
+                entity.Property(rt => rt.JwtId)
+                    .IsRequired();
+
+                entity.Property(rt => rt.IsUsed)
+                    .IsRequired()
+                    .HasDefaultValue(false);
+
+                entity.Property(rt => rt.IsRevoked)
+                    .IsRequired()
+                    .HasDefaultValue(false);
+
+                entity.Property(rt => rt.Expires)
+                    .IsRequired();
+
+                entity.Property(rt => rt.AddedDate)
+                    .IsRequired();
+            });
+
+            // ==================== WORK SCHEDULE ====================
+            modelBuilder.Entity<WorkSchedule>(entity =>
+            {
+                entity.HasOne(ws => ws.Account)
+                    .WithMany(a => a.WorkSchedules)
+                    .HasForeignKey(ws => ws.AccountId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(ws => ws.WorkDate)
+                    .IsRequired();
+
+                entity.Property(ws => ws.StartTime)
+                    .IsRequired();
+
+                entity.Property(ws => ws.EndTime)
+                    .IsRequired();
+
+                entity.Property(ws => ws.ShiftName)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(ws => ws.ActualCheckIn);
+
+                entity.Property(ws => ws.ActualCheckOut);
+
+                entity.Property(ws => ws.Status)
+                    .IsRequired();
+
+                entity.Property(ws => ws.Note)
+                    .HasMaxLength(500);
             });
         }
     }

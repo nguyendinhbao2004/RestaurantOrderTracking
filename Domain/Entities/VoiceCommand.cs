@@ -16,6 +16,7 @@ namespace RestaurantOrderTracking.Domain.Entities
         public string? TranscribedText { get; private set; }
         public Guid? ParsedTableId { get; private set; }
         public string? ParsedAction { get; private set; }
+        public string ParsedProductName { get; set; }
         public float? ConfidenceScore { get; private set; }
         public VoiceCommandStatus Status { get; private set; }
         public string? ErrorMessage { get; private set; }

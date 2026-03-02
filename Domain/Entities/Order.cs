@@ -12,6 +12,9 @@ namespace RestaurantOrderTracking.Domain.Entities
         public Guid TableId { get; private set; }
         public virtual Table Table { get; private set; } = null!;
 
+        public Guid AccountId { get; private set; }
+        public virtual Account Account { get; private set; } = null!;
+
         public Guid? CustomerId { get; private set; }
         public virtual Customer? Customer { get; private set; }
 
@@ -20,19 +23,20 @@ namespace RestaurantOrderTracking.Domain.Entities
         private readonly List<OrderItem> _orderItems = new();
         public IReadOnlyCollection<OrderItem> OrderItems => _orderItems.AsReadOnly();
 
-        public virtual Bill? Bill { get; private set; }
+        public virtual Bill? Bill { get; set; }
 
         protected Order() { }
 
-        public Order(Guid tableId)
+        public Order(Guid tableId, Guid accountId)
         {
             TableId = tableId;
+            AccountId = accountId;
             Status = OrderStatus.Open;
         }
 
         public void AddItem(Guid productId, Guid accountId, string note, string orderChannel)
         {
-            if (Status == OrderStatus.Close || Status == OrderStatus.Paying)
+            if (Status == OrderStatus.Paying || Status == OrderStatus.Close)
             {
                 throw new InvalidOperationException("Cannot add items to a closed order.");
             }
@@ -45,6 +49,19 @@ namespace RestaurantOrderTracking.Domain.Entities
             Status = status;
         }
 
+     
+
+        
+
+        public void CheckOut()
+        {
+            if (_orderItems.Any(i => i.Status != OrderItemStatus.Served))
+            {
+                throw new InvalidOperationException("Cannot checkout. Some items are not served yet.");
+            }
+            Status = OrderStatus.Paying;
+            AddDomainEvent(new OrderCheckedOutEvent(this.Id));
+        }
 
         public decimal CalculateTotal()
         {

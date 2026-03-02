@@ -1,4 +1,5 @@
 ﻿using RestaurantOrderTracking.Domain.Common;
+using RestaurantOrderTracking.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -17,6 +18,7 @@ namespace RestaurantOrderTracking.Domain.Entities
         public DateTime? ActualCheckIn { get; private set; }
 
         public DateTime? ActualCheckOut { get; private set; }
+        public WorkScheduleStatus Status { get; set; }
         public string? Note { get; set; }
 
         public virtual Account Account { get; private set; } = null!;

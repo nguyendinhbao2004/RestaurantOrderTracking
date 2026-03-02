@@ -15,6 +15,7 @@ namespace RestaurantOrderTracking.Domain.Entities
         public decimal Amount { get; private set; }
         public decimal? Discount { get; private set; }
         public decimal FinalAmount { get; private set; }
+        public float Tax { get; private set; }
         public PaymentMethod PaymentMethod { get; private set; }
         public BillStatus Status { get; private set; }
         public DateTime? PaidAt { get; private set; }
