@@ -12,6 +12,8 @@ namespace RestaurantOrderTracking.Domain.Entities
         public Guid TableId { get; private set; }
         public virtual Table Table { get; private set; } = null!;
 
+        public OrderType OrderTypes { get; private set; }
+
         public Guid AccountId { get; private set; }
         public virtual Account Account { get; private set; } = null!;
 
@@ -23,7 +25,7 @@ namespace RestaurantOrderTracking.Domain.Entities
         private readonly List<OrderItem> _orderItems = new();
         public IReadOnlyCollection<OrderItem> OrderItems => _orderItems.AsReadOnly();
 
-        public virtual Bill? Bill { get; set; }
+        public virtual Bill? Bill { get; private set; }
 
         protected Order() { }
 

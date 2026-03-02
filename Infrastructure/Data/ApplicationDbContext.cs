@@ -219,7 +219,9 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                     .WithMany(c => c.Orders)
                     .HasForeignKey(o => o.CustomerId)
                     .OnDelete(DeleteBehavior.SetNull);
-
+                entity.Property(o => o.OrderTypes)
+                    .IsRequired();
+                
                 entity.Property(o => o.Status)
                     .IsRequired();
             });
@@ -254,11 +256,6 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                 entity.Property(oi => oi.Note)
                     .HasMaxLength(500);
 
-                entity.Property(oi => oi.Quantity)
-                    .IsRequired();
-
-                entity.Property(oi => oi.UnitPrice)
-                    .HasPrecision(18, 2);
 
                 entity.Property(oi => oi.Status)
                     .IsRequired();

@@ -20,15 +20,10 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         public string OrderChannel { get; private set; } = null!;
         public string? Note { get; private set; }
-        public int Quantity { get; private set; } = 1;
-        public decimal UnitPrice { get; private set; }
+        
         public OrderItemStatus Status { get; private set; }
 
-        public DateTime? ConfirmedAt { get; private set; }
-        public DateTime? KitchenConfirmedAt { get; private set; }
-        public DateTime? KitchenFinishedAt { get; private set; }
-        public DateTime? WaiterArrivedAt { get; private set; }
-        public DateTime? WaiterServedAt { get; private set; }
+       
 
         protected OrderItem() { }
 
@@ -38,42 +33,10 @@ namespace RestaurantOrderTracking.Domain.Entities
             ProductId = productId;
             OrderChannel = orderChannel;
             Note = note;
-            Quantity = quantity;
             Status = OrderItemStatus.Pending;
         }
 
-        public void Confirm()
-        {
-            Status = OrderItemStatus.Confirmed;
-            ConfirmedAt = DateTime.UtcNow;
-        }
-
-        public void ConfirmByKitchen(Guid chefAccountId)
-        {
-            ChefAccountId = chefAccountId;
-            Status = OrderItemStatus.Cooking;
-            KitchenConfirmedAt = DateTime.UtcNow;
-        }
-
-        public void FinishByKitchen()
-        {
-            Status = OrderItemStatus.Ready;
-            KitchenFinishedAt = DateTime.UtcNow;
-        }
-
-        public void PickUpByWaiter(Guid waiterAccountId)
-        {
-            WaiterAccountId = waiterAccountId;
-            Status = OrderItemStatus.Delivering;
-            WaiterArrivedAt = DateTime.UtcNow;
-        }
-
-        public void ServeByWaiter()
-        {
-            Status = OrderItemStatus.Served;
-            WaiterServedAt = DateTime.UtcNow;
-        }
-
+       
         public void Cancel()
         {
             Status = OrderItemStatus.Cancelled;
@@ -82,25 +45,6 @@ namespace RestaurantOrderTracking.Domain.Entities
         public void UpdateNote(string? note)
         {
             Note = note;
-        }
-
-        public void UpdateQuantity(int quantity)
-        {
-            if (quantity < 1)
-            {
-                throw new ArgumentException("Quantity must be at least 1.", nameof(quantity));
-            }
-            Quantity = quantity;
-        }
-
-        public void SetUnitPrice(decimal unitPrice)
-        {
-            UnitPrice = unitPrice;
-        }
-
-        public decimal GetTotalPrice()
-        {
-            return UnitPrice * Quantity;
         }
     }
 }
