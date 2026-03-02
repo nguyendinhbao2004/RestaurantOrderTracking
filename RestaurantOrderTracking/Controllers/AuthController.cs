@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using RestaurantOrderTracking.Application.Feature.Auth.Command.Login;
-using RestaurantOrderTracking.Application.Feature.Auth.Command.Register;
+using RestaurantOrderTracking.Application.Feature.Auth.Command.Register.RegisterOtherRole;
 using WebApi.Common;
 
 namespace RestaurantOrderTracking.WebApi.Controllers

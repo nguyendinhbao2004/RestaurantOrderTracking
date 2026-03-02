@@ -36,7 +36,14 @@ namespace Application.Feature.Auth.Command.Register.RegisterWaiter
 
                 // 2. Process Account Creation
                 var hashedPassword = _accountRepository.HashPassword(request.Password);
-                var newAccount = new RestaurantOrderTracking.Domain.Entities.Account(4, request.UserName, request.FullName, request.Phone, hashedPassword, request.Img);
+                var newAccount = new RestaurantOrderTracking.Domain.Entities.Account(
+                        roleId: 4,
+                        userName: request.UserName,
+                        fullName: request.FullName,
+                        phone: request.Phone,
+                        passwordHash: hashedPassword,
+                        image: request.Img
+                    );
                 
                 await _accountRepository.AddAsync(newAccount);
                 _logger.LogDebug("Account entity created for {UserName}", request.UserName);
@@ -46,7 +53,6 @@ namespace Application.Feature.Auth.Command.Register.RegisterWaiter
                 var newWaiter = new Waiter(
                     accountId: newAccount.Id,
                     assignedAreaId: request.AreaId,
-                    skillLevel: "Beginner",
                     isAvailable: true,
                     maxTables: 5
                     );

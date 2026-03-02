@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace RestaurantOrderTracking.Application.Feature.Auth.Command.Register
+namespace RestaurantOrderTracking.Application.Feature.Auth.Command.Register.RegisterOtherRole
 {
     public class RegisterCommand : IRequest<Result<string>>
     {
