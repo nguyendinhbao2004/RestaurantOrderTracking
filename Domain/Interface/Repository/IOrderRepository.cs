@@ -8,5 +8,6 @@ namespace RestaurantOrderTracking.Domain.Interface.Repository
     public interface IOrderRepository : IGenericRepository<Order>
     {
         Task<(IEnumerable<Order>, int totalCount)> GetPagedOrdersAsync(string? keyword, int pageIndex, int pageSize);
+        Task<bool> TableHasActiveOrder(Guid tableId);
     }
 }

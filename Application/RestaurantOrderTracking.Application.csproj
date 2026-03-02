@@ -23,4 +23,8 @@
     <Folder Include="Common\Interface\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EditorConfigFiles Remove="F:\SWD\RestaurantOrderTracking\Application\Feature\Order\Commands\Update\UpdateInfo\.editorconfig" />
+  </ItemGroup>
+
 </Project>

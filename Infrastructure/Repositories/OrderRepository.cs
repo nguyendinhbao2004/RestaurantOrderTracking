@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RestaurantOrderTracking.Domain.Entities;
+using RestaurantOrderTracking.Domain.Enums;
 using RestaurantOrderTracking.Domain.Interface.Repository;
 using RestaurantOrderTracking.Infrastructure.Data;
 using System;
@@ -28,6 +29,13 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
                 .Take(pageSize)
                 .ToListAsync();
             return (items, totalCount);
+        }
+
+        public async Task<bool> TableHasActiveOrder(Guid tableId)
+        {
+            return await _dbSet.AnyAsync(o =>
+                o.TableId == tableId &&
+                (o.Status == OrderStatus.Confirmed || o.Status == OrderStatus.Paying));
         }
     }
 }

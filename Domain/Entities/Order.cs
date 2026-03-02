@@ -29,31 +29,100 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         protected Order() { }
 
-        public Order(Guid tableId, Guid accountId)
+        public Order(Guid tableId, Guid accountId, OrderType orderType)
         {
             TableId = tableId;
             AccountId = accountId;
-            Status = OrderStatus.Open;
+            OrderTypes = orderType;
+
+            // NEW: set status khởi tạo theo type
+            Status = orderType switch
+            {
+                OrderType.Delivery => OrderStatus.Pending,
+                OrderType.DineIn => OrderStatus.Confirmed,
+                OrderType.TakeAway => OrderStatus.Confirmed,
+                _ => throw new ArgumentOutOfRangeException(nameof(orderType))
+            };
         }
 
         public void AddItem(Guid productId, Guid accountId, string note, string orderChannel)
         {
-            if (Status == OrderStatus.Paying || Status == OrderStatus.Close)
+            if (Status == OrderStatus.Paying || Status == OrderStatus.Completed || Status == OrderStatus.Cancelled)
             {
                 throw new InvalidOperationException("Cannot add items to a closed order.");
             }
             var orderItem = new OrderItem(this.Id, productId, orderChannel, note);
             _orderItems.Add(orderItem);
         }
-
-        public void UpdateStatus(OrderStatus status)
+        private bool IsValidTransition(OrderStatus newStatus)
         {
-            Status = status;
+            return OrderTypes switch
+            {
+                OrderType.DineIn => IsValidDineInTransition(newStatus),
+                OrderType.TakeAway => IsValidTakeAwayTransition(newStatus),
+                OrderType.Delivery => IsValidDeliveryTransition(newStatus),
+                _ => false
+            };
+        }
+        private bool IsValidDineInTransition(OrderStatus newStatus)
+        {
+            return (Status, newStatus) switch
+            {
+                (OrderStatus.Confirmed, OrderStatus.Paying) => true,
+                (OrderStatus.Paying, OrderStatus.Completed) => true,
+                (_, OrderStatus.Cancelled) => true,
+                _ => false
+            };
+        }
+        private bool IsValidTakeAwayTransition(OrderStatus newStatus)
+        {
+            return (Status, newStatus) switch
+            {
+                (OrderStatus.Confirmed, OrderStatus.Preparing) => true,
+                (OrderStatus.Preparing, OrderStatus.Paying) => true,
+                (OrderStatus.Paying, OrderStatus.Completed) => true,
+                _ => false
+            };
+        }
+        private bool IsValidDeliveryTransition(OrderStatus newStatus)
+        {
+            return (Status, newStatus) switch
+            {
+                (OrderStatus.Pending, OrderStatus.Confirmed) => true,
+                (OrderStatus.Confirmed, OrderStatus.Preparing) => true,
+                (OrderStatus.Preparing, OrderStatus.Delivering) => true,
+                (OrderStatus.Delivering, OrderStatus.Completed) => true,
+                _ => false
+            };
+        }
+        public void UpdateStatus(OrderStatus newStatus)
+        {
+            if (!IsValidTransition(newStatus))
+            {
+                throw new InvalidOperationException(
+                    $"Invalid status transition from {Status} to {newStatus} for {OrderTypes}"
+                );
+            }
+
+            Status = newStatus;
         }
 
-     
+        public void UpdateInfo(Guid newTableId, OrderType newOrderType)
+        {
+            if (Status == OrderStatus.Completed || Status == OrderStatus.Cancelled)
+                throw new InvalidOperationException("Cannot update a completed or cancelled order.");
 
-        
+            if (OrderTypes == OrderType.Delivery)
+                throw new InvalidOperationException("Cannot update info of a delivery order.");
+
+            if (newOrderType == OrderType.Delivery)
+                throw new InvalidOperationException("Order type can only be DineIn or TakeAway.");
+
+            TableId = newTableId;
+            OrderTypes = newOrderType;
+        }
+
+
 
         public void CheckOut()
         {
@@ -61,7 +130,10 @@ namespace RestaurantOrderTracking.Domain.Entities
             {
                 throw new InvalidOperationException("Cannot checkout. Some items are not served yet.");
             }
-            Status = OrderStatus.Paying;
+
+            
+            UpdateStatus(OrderStatus.Paying);
+
             AddDomainEvent(new OrderCheckedOutEvent(this.Id));
         }
 

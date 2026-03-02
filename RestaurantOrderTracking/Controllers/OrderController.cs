@@ -1,6 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RestaurantOrderTracking.Application.Feature.Order.Commands.Create;
+using RestaurantOrderTracking.Application.Feature.Order.Commands.Update.UpdateInfo;
+using RestaurantOrderTracking.Application.Feature.Order.Commands.Update.UpdateStatus;
 
 namespace RestaurantOrderTracking.WebApi.Controllers
 {
@@ -33,6 +36,56 @@ namespace RestaurantOrderTracking.WebApi.Controllers
             var query = new Application.Feature.Order.Queries.GetAllOrder.GetAllOrderQueries(keyword, pageIndex, pageSize);
             var result = await _mediator.Send(query);
             return Ok(result);
+        }
+        /// <summary>
+        /// Creates a new order.
+        /// </summary>
+        /// <param name="command">Order creation request</param>
+        /// <returns>Result of order creation</returns>
+        /// <response code="200">Order created successfully</response>
+        /// <response code="400">Validation failed</response>
+        [HttpPost]
+        public async Task<IActionResult> CreateOrder(CreateOrderCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            if (result.Succeeded)
+                return Ok(result);
+
+            return BadRequest(result.Errors);
+        }
+        /// <summary>
+        /// Updates basic information of an order.
+        /// </summary>
+        /// <param name="command">Updated order information</param>
+        /// <returns>Result of update operation</returns>
+        /// <response code="200">Order updated successfully</response>
+        /// <response code="400">Validation failed</response>
+        [HttpPut("Update-Info")]
+        public async Task<IActionResult> UpdateOrder([FromBody] UpdateInfoOrderCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            if (result.Succeeded)
+                return Ok(result);
+
+            return BadRequest(result.Errors);
+        }
+        /// <summary>
+        /// Updates status of an order.
+        /// </summary>
+        /// <param name="command">Status update request</param>
+        /// <returns>Result of status update</returns>
+        [HttpPut("Update-Status")]
+        public async Task<IActionResult> UpdateOrderStatus(
+            [FromBody] UpdateStatusOrderCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            if (result.Succeeded)
+                return Ok(result);
+
+            return BadRequest(result.Errors);
         }
     }
 }
