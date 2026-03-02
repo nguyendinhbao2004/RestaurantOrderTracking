@@ -11,6 +11,7 @@ namespace RestaurantOrderTracking.Application.Common.Mapping
     {
         public OrderMappingProfile() {
             CreateMap<Order,OrderResponse>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.TableNumber, opt => opt.MapFrom(src => src.Table.TableNumber))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
         }

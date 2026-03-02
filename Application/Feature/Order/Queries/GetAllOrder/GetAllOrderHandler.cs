@@ -21,7 +21,7 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Queries.GetAllOrder
         public async Task<PagedResult<OrderResponse>> Handle(GetAllOrderQueries request, CancellationToken cancellationToken)
         {
             var (orders, totalCount) = await _orderRepository.GetPagedOrdersAsync(request.Keyword, request.PageIndex, request.PageSize);
-            var orderResponses = _mapper.Map<List<OrderResponse>>(orders);
+            var orderResponses = _mapper.Map<List<OrderResponse>>(orders).ToList();
             return new PagedResult<OrderResponse>(orderResponses, totalCount, request.PageIndex, request.PageSize, "Get Order Successfull");
         }
     }

@@ -17,17 +17,18 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
 
         public async Task<(IEnumerable<Order>, int totalCount)> GetPagedOrdersAsync(string? keyword, int pageIndex, int pageSize)
         {
-            var query = _dbSet.AsQueryable();
+            var query = _dbSet.Include(o => o.Table).AsQueryable();
             if (!string.IsNullOrEmpty(keyword))
             {
                 query = query.Where(p => p.Table.TableNumber.Contains(keyword));
             }
-            var totalCount = await query.CountAsync();
+            
             var items = await query
                 .OrderByDescending(p => p.CreatedAt)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+            var totalCount = await query.CountAsync();
             return (items, totalCount);
         }
 
