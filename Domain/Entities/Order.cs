@@ -9,13 +9,10 @@ namespace RestaurantOrderTracking.Domain.Entities
 {
     public class Order : BaseEntities
     {
-        public Guid TableId { get; private set; }
+        public Guid? TableId { get; private set; }
         public virtual Table Table { get; private set; } = null!;
 
         public OrderType OrderTypes { get; private set; }
-
-        public Guid AccountId { get; private set; }
-        public virtual Account Account { get; private set; } = null!;
 
         public Guid? CustomerId { get; private set; }
         public virtual Customer? Customer { get; private set; }
@@ -29,10 +26,9 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         protected Order() { }
 
-        public Order(Guid tableId, Guid accountId, OrderType orderType)
+        public Order(Guid tableId, OrderType orderType)
         {
             TableId = tableId;
-            AccountId = accountId;
             OrderTypes = orderType;
 
             // NEW: set status khởi tạo theo type

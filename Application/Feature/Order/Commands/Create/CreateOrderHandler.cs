@@ -57,7 +57,6 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Commands.Create
 
             var order = new OrderEntity(
                 tableId: request.TableId ?? Guid.Empty,  // nếu delivery thì tạm để Guid.Empty
-                accountId: request.AccountId,
                 orderType: request.OrderType
             );
 
