@@ -12,24 +12,21 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         public Guid AssignedAreaId { get; private set; }
         public virtual Area AssignedArea { get; private set; } = null!;
-        public bool IsAvailable { get; private set; }
-        public int MaxTables { get; private set; }
+        public int? OrderCount { get; private set; }
 
         protected Waiter() { }
 
-        public Waiter(Guid accountId, Guid assignedAreaId, bool isAvailable, int maxTables)
+        public Waiter(Guid accountId, Guid assignedAreaId, bool isAvailable, int? orderCount)
         {
             AccountId = accountId;
             AssignedAreaId = assignedAreaId;
-            IsAvailable = isAvailable;
-            MaxTables = maxTables;
+            OrderCount = orderCount;
         }
 
-        public void UpdateWaiter(Guid assignedAreaId, bool isAvailable, int maxTables)
+        public void UpdateWaiter(Guid assignedAreaId, bool isAvailable, int? orderCount)
         {
             AssignedAreaId = assignedAreaId;
-            IsAvailable = isAvailable;
-            MaxTables = maxTables;
+            OrderCount = orderCount;
         }
     }
 }

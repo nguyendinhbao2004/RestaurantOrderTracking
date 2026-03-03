@@ -54,7 +54,7 @@ namespace Application.Feature.Auth.Command.Register.RegisterWaiter
                     accountId: newAccount.Id,
                     assignedAreaId: request.AreaId,
                     isAvailable: true,
-                    maxTables: 5
+                    orderCount: 5
                     );
                 await _waiterRepository.AddAsync(newWaiter);
 

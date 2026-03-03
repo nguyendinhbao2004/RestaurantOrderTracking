@@ -104,10 +104,7 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                     .HasForeignKey(w => w.AssignedAreaId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.Property(w => w.IsAvailable)
-                    .IsRequired();
-
-                entity.Property(w => w.MaxTables)
+                entity.Property(w => w.OrderCount)
                     .IsRequired();
 
                 entity.HasIndex(w => w.AccountId)
