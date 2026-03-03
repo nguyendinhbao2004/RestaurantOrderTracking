@@ -14,6 +14,9 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         public OrderType OrderTypes { get; private set; }
 
+        public Guid? WaiterId { get; private set; }
+        public virtual Account Waiter { get; private set; } = null!;
+
         public Guid? CustomerId { get; private set; }
         public virtual Customer? Customer { get; private set; }
 

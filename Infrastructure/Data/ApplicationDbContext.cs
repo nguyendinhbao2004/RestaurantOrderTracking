@@ -207,6 +207,11 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                     .HasForeignKey(o => o.TableId)
                     .OnDelete(DeleteBehavior.Restrict);
 
+                entity.HasOne(o => o.Waiter)
+                  .WithMany()
+                  .HasForeignKey(o => o.WaiterId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
                 entity.HasOne(o => o.Customer)
                     .WithMany(c => c.Orders)
                     .HasForeignKey(o => o.CustomerId)
