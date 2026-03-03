@@ -30,6 +30,7 @@ namespace RestaurantOrderTracking.Infrastructure.Data
         public DbSet<VoiceCommand> VoiceCommands { get; set; } = null!;
         public DbSet<Waiter> Waiters { get; set; } = null!;
         public DbSet<WorkSchedule> WorkSchedules { get; set; } = null!;
+        public DbSet<QRSession> QRSessions { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -465,6 +466,33 @@ namespace RestaurantOrderTracking.Infrastructure.Data
 
                 entity.Property(ws => ws.Note)
                     .HasMaxLength(500);
+            });
+
+            // ==================== QR SESSION ====================
+            modelBuilder.Entity<QRSession>(entity =>
+            {
+                entity.HasOne(qs => qs.Table)
+                    .WithMany()
+                    .HasForeignKey(qs => qs.TableId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(qs => qs.SessionToken)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(qs => qs.ExpiresAt)
+                    .IsRequired();
+
+                entity.Property(qs => qs.IsActive)
+                    .IsRequired()
+                    .HasDefaultValue(true);
+
+                entity.HasIndex(qs => qs.SessionToken)
+                    .IsUnique()
+                    .HasDatabaseName("IX_QRSession_SessionToken");
+
+                entity.HasIndex(qs => new { qs.TableId, qs.IsActive })
+                    .HasDatabaseName("IX_QRSession_TableId_IsActive");
             });
         }
     }
