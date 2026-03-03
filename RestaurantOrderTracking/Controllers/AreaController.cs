@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantOrderTracking.Application.Feature.Area.Commands.Create;
+using RestaurantOrderTracking.Application.Feature.Area.Commands.Delete;
+using RestaurantOrderTracking.Application.Feature.Area.Commands.Update;
 using RestaurantOrderTracking.Application.Feature.Area.Queries.GetAll;
 
 namespace RestaurantOrderTracking.WebApi.Controllers
@@ -42,6 +44,43 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateArea([FromBody] CreateAreaCommand command)
         {
+            var result = await _mediator.Send(command);
+
+            if (result.Succeeded)
+                return Ok(result);
+
+            return BadRequest(result);
+        }
+
+        /// <summary>
+        /// Updates an existing area.
+        /// </summary>
+        /// <param name="command">Update request with optional fields.</param>
+        /// <returns>Result of the update operation.</returns>
+        /// <response code="200">Area updated successfully.</response>
+        /// <response code="400">Update failed.</response>
+        [HttpPut]
+        public async Task<IActionResult> UpdateArea([FromBody] UpdateAreaCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            if (result.Succeeded)
+                return Ok(result);
+
+            return BadRequest(result);
+        }
+
+        /// <summary>
+        /// Deletes an area by ID.
+        /// </summary>
+        /// <param name="id">The ID of the area to delete.</param>
+        /// <returns>Result of the delete operation.</returns>
+        /// <response code="200">Area deleted successfully.</response>
+        /// <response code="400">Delete failed (area has tables or waiters).</response>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteArea([FromRoute] Guid id)
+        {
+            var command = new DeleteAreaCommand(id);
             var result = await _mediator.Send(command);
 
             if (result.Succeeded)
