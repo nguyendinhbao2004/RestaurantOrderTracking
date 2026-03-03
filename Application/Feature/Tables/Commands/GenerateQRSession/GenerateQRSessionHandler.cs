@@ -1,26 +1,33 @@
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using RestaurantOrderTracking.Application.Dto.Table;
 using RestaurantOrderTracking.Domain.Common;
 using RestaurantOrderTracking.Domain.Entities;
 using RestaurantOrderTracking.Domain.Interface;
 using RestaurantOrderTracking.Domain.Interface.Repository;
 
-namespace RestaurantOrderTracking.Application.Feature.Table.Commands.GenerateQRSession
+namespace RestaurantOrderTracking.Application.Feature.Tables.Commands.GenerateQRSession
 {
     public class GenerateQRSessionHandler : IRequestHandler<GenerateQRSessionCommand, Result<QRSessionResponse>>
     {
         private readonly ITableRepository _tableRepository;
         private readonly IGenericRepository<QRSession> _qrSessionRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IQRCodeService _qrCodeService;
+        private readonly string _qrBaseUrl;
 
         public GenerateQRSessionHandler(
             ITableRepository tableRepository,
             IGenericRepository<QRSession> qrSessionRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IQRCodeService qrCodeService,
+            IConfiguration configuration)
         {
             _tableRepository = tableRepository;
             _qrSessionRepository = qrSessionRepository;
             _unitOfWork = unitOfWork;
+            _qrCodeService = qrCodeService;
+            _qrBaseUrl = configuration["QR:BaseUrl"] ?? "https://localhost:7260/order";
         }
 
         public async Task<Result<QRSessionResponse>> Handle(GenerateQRSessionCommand request, CancellationToken cancellationToken)
@@ -49,13 +56,18 @@ namespace RestaurantOrderTracking.Application.Feature.Table.Commands.GenerateQRS
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+            // 5. Sinh ảnh QR từ URL chứa session token
+            var qrContent = $"{_qrBaseUrl}?session={newSession.SessionToken}";
+            var qrBase64 = _qrCodeService.GenerateBase64(qrContent);
+
             return Result<QRSessionResponse>.Success("QR Session generated successfully.", new QRSessionResponse
             {
                 TableId = table.Id,
                 TableNumber = table.TableNumber,
                 SessionToken = newSession.SessionToken,
                 ExpiresAt = newSession.ExpiresAt,
-                IsActive = newSession.IsActive
+                IsActive = newSession.IsActive,
+                QRCodeBase64 = qrBase64
             });
         }
     }

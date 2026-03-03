@@ -10,6 +10,7 @@ using RestaurantOrderTracking.Domain.Interface.Repository;
 using RestaurantOrderTracking.Infrastructure.Authentication;
 using RestaurantOrderTracking.Infrastructure.Data;
 using RestaurantOrderTracking.Infrastructure.Repositories;
+using RestaurantOrderTracking.Infrastructure.Services;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -39,7 +40,9 @@ namespace RestaurantOrderTracking.Infrastructure
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IBillRepository, BillRepository>();
 
-            // Thêm các repository cụ thể khác nếu cần
+            // QR Code Service
+            services.AddScoped<RestaurantOrderTracking.Domain.Interface.IQRCodeService, QRCodeService>();
+
             return services;
         }
     }

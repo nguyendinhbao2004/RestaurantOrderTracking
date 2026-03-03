@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Application.Feature.Tables.Commands.Create;
 using Application.Feature.Tables.Commands.Update.UpdateInfo;
 using Application.Feature.Tables.Commands.Update.UpdateStatus;
@@ -7,6 +7,8 @@ using Application.Feature.Tables.Queries.GetById;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RestaurantOrderTracking.Application.Feature.Tables.Commands.GenerateQRSession;
+using RestaurantOrderTracking.Application.Feature.Tables.Commands.RefreshQRSession;
 
 namespace RestaurantOrderTracking.WebApi.Controllers
 {
@@ -133,5 +135,57 @@ namespace RestaurantOrderTracking.WebApi.Controllers
             var result = await _mediator.Send(command);
             return Ok(result);
         }
+
+        #region QR Session Management
+
+        /// <summary>
+        /// Generates a new QR session for a table.
+        /// </summary>
+        /// <remarks>
+        /// This will revoke all existing active sessions for the table and create a new one.
+        /// The session token is also updated on the Table entity.
+        /// Default expiration: 8 hours (480 minutes).
+        /// </remarks>
+        /// <param name="tableId">The ID of the table to generate a QR session for.</param>
+        /// <returns>The generated QR session information.</returns>
+        /// <response code="200">QR session generated successfully.</response>
+        /// <response code="400">Table not found.</response>
+        [HttpPost("qr-session/{tableId}")]
+        public async Task<IActionResult> GenerateQRSession([FromRoute] Guid tableId)
+        {
+            var command = new GenerateQRSessionCommand(tableId);
+            var result = await _mediator.Send(command);
+
+            if (result.Succeeded)
+                return Ok(result);
+
+            return BadRequest(result);
+        }
+
+        /// <summary>
+        /// Refreshes the QR session for a table.
+        /// </summary>
+        /// <remarks>
+        /// If an active session exists, it generates a new token and extends the expiration.
+        /// If no active session exists, a new one is created.
+        /// </remarks>
+        /// <param name="tableId">The ID of the table to refresh the QR session for.</param>
+        /// <returns>The refreshed QR session information.</returns>
+        /// <response code="200">QR session refreshed successfully.</response>
+        /// <response code="400">Table not found.</response>
+        [HttpPut("qr-session/{tableId}/refresh")]
+        public async Task<IActionResult> RefreshQRSession([FromRoute] Guid tableId)
+        {
+            var command = new RefreshQRSessionCommand(tableId);
+            var result = await _mediator.Send(command);
+
+            if (result.Succeeded)
+                return Ok(result);
+
+            return BadRequest(result);
+        }
+
+        #endregion
+
     }
 }
