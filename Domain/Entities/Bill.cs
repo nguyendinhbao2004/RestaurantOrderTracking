@@ -51,5 +51,28 @@ namespace RestaurantOrderTracking.Domain.Entities
             Discount = discount;
             FinalAmount = Amount - discount;
         }
+
+        public void Update(PaymentMethod? paymentMethod, decimal? discount)
+        {
+            if (Status != BillStatus.unpaid)
+                throw new InvalidOperationException("Cannot update a bill that is not unpaid.");
+
+            if (paymentMethod.HasValue)
+                PaymentMethod = paymentMethod.Value;
+
+            if (discount.HasValue)
+            {
+                Discount = discount.Value;
+                FinalAmount = Amount - discount.Value;
+            }
+        }
+
+        public void Refund()
+        {
+            if (Status != BillStatus.paid)
+                throw new InvalidOperationException("Only paid bills can be refunded.");
+
+            Status = BillStatus.refunded;
+        }
     }
 }
