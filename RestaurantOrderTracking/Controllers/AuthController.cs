@@ -1,4 +1,5 @@
-﻿using Application.Feature.Auth.Command.Register.RegisterWaiter;
+﻿using Application.Feature.Auth.Command.Register.RegisterChef;
+using Application.Feature.Auth.Command.Register.RegisterWaiter;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -88,6 +89,41 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         /// <response code="500">Internal Server Error</response>
         [HttpPost("CreateWaiter")]
         public async Task<IActionResult> CreateWaiter([FromBody] RegisterWaiterCommand command)
+        {
+            var result = await _mediator.Send(command);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Creates a new chef account using the specified registration details.
+        /// </summary>
+        /// <remarks>
+        /// This is an API endpoint to create a new chef account in the system.
+        /// <br/>
+        /// Locallhost:5015/api/Auth/CreateChef
+        /// <br/>
+        /// Enum speciality:
+        /// <br/>
+        /// HeadChef=1 -> bếp chính
+        /// <br/>
+        /// AsiaChef=2 -> món á
+        /// <br/>
+        /// WesternChef=3 -> món tây
+        /// <br/>
+        /// ChefAssistant=4->phụ bếp
+        /// </remarks>
+        /// <param name="command"></param>
+        /// <returns></returns> 
+        /// <returns></returns>
+        /// <response code="200">Chef Register Successfully</response>
+        /// <response code="400">Bad Request</response>
+        /// <response code="500">Internal Server Error</response>
+        [HttpPost("CreateChef")]
+        public async Task<IActionResult> CreateChef([FromBody] RegisterChefCommand command)
         {
             var result = await _mediator.Send(command);
             if (!result.Succeeded)
