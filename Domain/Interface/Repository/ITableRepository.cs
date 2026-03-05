@@ -11,5 +11,6 @@ namespace RestaurantOrderTracking.Domain.Interface.Repository
         Task<bool> IsOccupedAsync(int tableNumber);
         Task<(IEnumerable<Table>, int totalCount)> GetPagedTablesAsync(string? keyword, int pageIndex, int pageSize);
         Task<Table> GetByIdAsync(Guid id);
+        Task<IEnumerable<Table>> GetTablesByAreaIdAsync(Guid areaId);
     }
 }

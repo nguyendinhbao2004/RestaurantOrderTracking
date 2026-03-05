@@ -15,11 +15,13 @@ namespace RestaurantOrderTracking.Application.Feature.Auth.Command.Login
     {
         private readonly IJwtTokenGenerator _jwtTokenGenerator;
         private readonly IAccountRepository _accountRepo;
+        private readonly IWaiterRepository _waiterRepository;
         private readonly IUnitOfWork _unitOfWork;
-        public LoginHandler(IJwtTokenGenerator jwtTokenGenerator, IAccountRepository accountRepo, IUnitOfWork unitOfWork)
+        public LoginHandler(IJwtTokenGenerator jwtTokenGenerator, IAccountRepository accountRepo, IWaiterRepository waiterRepository, IUnitOfWork unitOfWork)
         {
             _jwtTokenGenerator = jwtTokenGenerator;
             _accountRepo = accountRepo;
+            _waiterRepository = waiterRepository;
             _unitOfWork = unitOfWork;
         }
         public async Task<Result<AuthResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -44,13 +46,26 @@ namespace RestaurantOrderTracking.Application.Feature.Auth.Command.Login
             user.AddRefreshToken(accessToken, refreshToken);
             _accountRepo.Update(user);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Get AreaId if user is a Waiter
+            Guid? areaId = null;
+            if (user.Role.Name.Equals("Waiter", StringComparison.OrdinalIgnoreCase))
+            {
+                var waiter = await _waiterRepository.GetByAccountIdAsync(user.Id);
+                if (waiter != null)
+                {
+                    areaId = waiter.AssignedAreaId;
+                }
+            }
+
             return Result<AuthResponse>.Success("Login Successfully",new AuthResponse
             {
                 Id = user.Id,
                 UserName = user.UserName,
                 Role = user.Role.Name,
                 AccessToken = accessToken,
-                RefreshToken = refreshToken
+                RefreshToken = refreshToken,
+                AreaId = areaId
             });
         }
     }
