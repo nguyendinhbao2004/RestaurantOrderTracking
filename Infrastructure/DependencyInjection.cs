@@ -38,6 +38,8 @@ namespace RestaurantOrderTracking.Infrastructure
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+            services.AddScoped<IOrderItemLogRepository, OrderItemLogRepository>();
             services.AddScoped<IBillRepository, BillRepository>();
 
             // QR Code Service
