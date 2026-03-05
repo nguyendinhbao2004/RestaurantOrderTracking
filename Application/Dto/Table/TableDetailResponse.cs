@@ -4,6 +4,7 @@ namespace Application.Dto.Table
 {
     public class TableDetailResponse
     {
+        public Guid Id { get; set; }
         public string TableNumber { get; set; } = null!;
         public string AreaName { get; set; }
         public string Status { get; set; }
