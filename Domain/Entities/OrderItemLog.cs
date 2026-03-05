@@ -14,16 +14,23 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         public OrderItemStatus PreviousStatus { get; private set; }
         public OrderItemStatus NewStatus { get; private set; }
-        public string Change_Source { get; private set; }
+        public string Change_Source { get; private set; } = null!;
         public string? Notes { get; private set; }
 
         protected OrderItemLog() { }
 
-        public OrderItemLog(Guid orderItemId, OrderItemStatus previousStatus, OrderItemStatus newStatus, Guid? accountId = null, string? notes = null)
+        public OrderItemLog(
+            Guid orderItemId,
+            OrderItemStatus previousStatus,
+            OrderItemStatus newStatus,
+            string changeSource,
+            Guid? accountId = null,
+            string? notes = null)
         {
             OrderItemId = orderItemId;
             PreviousStatus = previousStatus;
             NewStatus = newStatus;
+            Change_Source = changeSource;
             AccountId = accountId;
             Notes = notes;
         }
