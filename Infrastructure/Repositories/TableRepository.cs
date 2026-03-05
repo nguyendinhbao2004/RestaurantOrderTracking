@@ -40,6 +40,16 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
             return (items, totalCount);
         }
 
+        public async Task<IEnumerable<Table>> GetTablesByAreaIdAsync(Guid areaId)
+        {
+            var query = _dbSet.Include(t => t.Area)
+                                .Include(t => t.Orders)
+                                .AsQueryable();
+            query = query.Where(t => t.AreaId == areaId);
+            var tables = await query.OrderBy(t => t.TableNumber).ToListAsync();
+            return tables;
+        }
+
         public Task<bool> IsOccupedAsync(int tableNumber)
         {
             throw new NotImplementedException();

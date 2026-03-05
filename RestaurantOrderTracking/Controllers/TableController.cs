@@ -3,6 +3,7 @@ using Application.Feature.Tables.Commands.Create;
 using Application.Feature.Tables.Commands.Update.UpdateInfo;
 using Application.Feature.Tables.Commands.Update.UpdateStatus;
 using Application.Feature.Tables.Queries.GetAllTable;
+using Application.Feature.Tables.Queries.GetByAreaId;
 using Application.Feature.Tables.Queries.GetById;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -64,6 +65,29 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         public async Task<IActionResult> GetTableById([FromRoute] Guid id)
         {
             var query = new GetTableByIdQueries(id);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Gets all tables by area ID for waiters.
+        /// </summary>
+        /// <remarks>
+        /// Api endpoint to get all tables in a specific area in the system
+        /// <br/>
+        /// This endpoint is designed for waiters to retrieve tables in their assigned area.
+        /// <br/>
+        /// **Sample Request**: Login with valid waiter credentials, get area ID from /api/Area endpoint
+        /// </remarks>  
+        /// <param name="areaId">The unique identifier of the area to retrieve tables from.</param>
+        /// <returns>A list of tables in the specified area with their details.</returns>
+        /// <response code="200">Returns the list of tables in the specified area.</response>
+        /// <response code="400">If the provided area ID is invalid.</response>
+        /// <response code="500">If an internal server error occurs.</response>
+        [HttpGet("area/{areaId}")]
+        public async Task<IActionResult> GetTablesByAreaId([FromRoute] Guid areaId)
+        {
+            var query = new GetTablesByAreaIdQueries(areaId);
             var result = await _mediator.Send(query);
             return Ok(result);
         }

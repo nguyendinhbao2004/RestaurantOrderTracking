@@ -15,5 +15,7 @@ namespace RestaurantOrderTracking.Application.Dto.Auth
         public string AccessToken { get; set; }
 
         public string RefreshToken { get; set; }
+
+        public Guid? AreaId { get; set; }
     }
 }
