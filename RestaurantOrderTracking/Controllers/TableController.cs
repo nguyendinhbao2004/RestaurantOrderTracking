@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantOrderTracking.Application.Feature.Tables.Commands.GenerateQRSession;
 using RestaurantOrderTracking.Application.Feature.Tables.Commands.RefreshQRSession;
+using RestaurantOrderTracking.Application.Feature.Tables.Queries.GetBySessionToken;
 
 namespace RestaurantOrderTracking.WebApi.Controllers
 {
@@ -208,7 +209,37 @@ namespace RestaurantOrderTracking.WebApi.Controllers
 
             return BadRequest(result);
         }
+/// <summary>
+        /// Gets table information by session token (from QR code scan).
+        /// </summary>
+        /// <remarks>
+        /// This endpoint is used when a customer scans a QR code at a table.
+        /// It validates the session token and returns the table information,
+        /// allowing the frontend to pre-select the table for ordering.
+        /// 
+        /// **Usage flow:**
+        /// 1. Customer scans QR code → URL: /order?session={token}
+        /// 2. Frontend extracts session token from URL
+        /// 3. Call this API to get table info
+        /// 4. Display menu with pre-selected table
+        /// </remarks>
+        /// <param name="sessionToken">The session token from the QR code URL.</param>
+        /// <returns>Table information including tableId, tableNumber, area, and status.</returns>
+        /// <response code="200">Table information retrieved successfully.</response>
+        /// <response code="400">Invalid or expired session token.</response>
+        [HttpGet("by-session/{sessionToken}")]
+        public async Task<IActionResult> GetTableBySessionToken([FromRoute] string sessionToken)
+        {
+            var query = new GetTableBySessionTokenQuery(sessionToken);
+            var result = await _mediator.Send(query);
 
+            if (result.Succeeded)
+                return Ok(result);
+
+            return BadRequest(result);
+        }
+
+        
         #endregion
 
     }
