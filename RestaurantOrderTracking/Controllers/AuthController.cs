@@ -1,4 +1,5 @@
 ﻿using Application.Feature.Auth.Command.Register.RegisterChef;
+using Application.Feature.Auth.Command.Register.RegisterCustomer;
 using Application.Feature.Auth.Command.Register.RegisterWaiter;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -124,6 +125,33 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         /// <response code="500">Internal Server Error</response>
         [HttpPost("CreateChef")]
         public async Task<IActionResult> CreateChef([FromBody] RegisterChefCommand command)
+        {
+            var result = await _mediator.Send(command);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Creates a new customer account using the specified registration details.
+        /// </summary>
+        /// <remarks>
+        /// This is an API endpoint to create a new customer account in the system.
+        /// <br/>
+        /// Locallhost:5015/api/Auth/RegisterCustomer
+        /// </remarks>
+        /// <param name="command"></param>
+        /// <returns>
+        /// An IActionResult that represents the result of the customer account creation operation. Returns 200 OK with the
+        /// result if successful; otherwise, returns 400 Bad Request with error details.</returns>
+        /// <returns>Message: Customer Register Successfully</returns>
+        /// <response code="200">Customer Register Successfully</response>
+        /// <response code="400">Bad Request</response>
+        /// <response code="500">Internal Server Error</response>
+        [HttpPost("RegisterCustomer")]
+        public async Task<IActionResult> RegisterCustomer([FromBody] RegisterCustomerCommand command)
         {
             var result = await _mediator.Send(command);
             if (!result.Succeeded)

@@ -215,7 +215,7 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                     .OnDelete(DeleteBehavior.SetNull);
                 entity.Property(o => o.OrderTypes)
                     .IsRequired();
-                
+
                 entity.Property(o => o.Status)
                     .IsRequired();
             });

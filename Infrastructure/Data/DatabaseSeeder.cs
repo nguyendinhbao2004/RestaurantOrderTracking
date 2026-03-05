@@ -64,7 +64,8 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                 new Role(2, "Manager", "Restaurant manager with management access"),
                 new Role(3, "Chef", "Kitchen staff responsible for cooking"),
                 new Role(4, "Waiter", "Service staff responsible for serving customers"),
-                new Role(5, "Cashier", "Staff responsible for handling payments")
+                new Role(5, "Cashier", "Staff responsible for handling payments"),
+                new Role(6, "Customer", "End user who places orders")
             };
 
             await _context.Roles.AddRangeAsync(roles);
