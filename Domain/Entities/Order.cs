@@ -29,10 +29,11 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         protected Order() { }
 
-        public Order(Guid tableId, OrderType orderType)
+        public Order(Guid tableId, OrderType orderType, Guid? waiterId = null)
         {
             TableId = tableId;
             OrderTypes = orderType;
+            WaiterId = waiterId;
 
             // NEW: set status khởi tạo theo type
             Status = orderType switch
