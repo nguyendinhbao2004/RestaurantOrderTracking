@@ -35,6 +35,7 @@ namespace RestaurantOrderTracking.Domain.Entities
         public void CheckIn()
         {
             ActualCheckIn = DateTime.Now;
+            Status = WorkScheduleStatus.Present;
         }
 
         public void CheckOut()
@@ -42,9 +43,20 @@ namespace RestaurantOrderTracking.Domain.Entities
             ActualCheckOut = DateTime.Now;
         }
 
-        public void UpdateShiftName(string shiftName)
+        public void MarkAbsent()
         {
-            shiftName = shiftName;
+            Status = WorkScheduleStatus.Absent;
+        }
+
+        public void UpdateInfo(Guid accountId, DateOnly workDate, TimeOnly startTime, TimeOnly endTime, string shiftName, string? note, WorkScheduleStatus status)
+        {
+            AccountId = accountId;
+            WorkDate = workDate;
+            StartTime = startTime;
+            EndTime = endTime;
+            ShiftName = shiftName;
+            Note = note;
+            Status = status;
         }
     }
 }
