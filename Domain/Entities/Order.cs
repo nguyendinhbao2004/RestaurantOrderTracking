@@ -45,6 +45,19 @@ namespace RestaurantOrderTracking.Domain.Entities
             };
         }
 
+        /// <summary>
+        /// Constructor dành riêng cho đơn hàng online (Delivery từ khách đặt tại nhà).
+        /// TableId = null, CustomerId được gán ngay, WaiterId = null.
+        /// </summary>
+        public Order(OrderType orderType, Guid customerId)
+        {
+            TableId = null;
+            CustomerId = customerId;
+            OrderTypes = orderType;
+            WaiterId = null;
+            Status = OrderStatus.Pending;
+        }
+
         public void AddItem(Guid productId, Guid accountId, string note, string orderChannel)
         {
             if (Status == OrderStatus.Paying || Status == OrderStatus.Completed || Status == OrderStatus.Cancelled)
