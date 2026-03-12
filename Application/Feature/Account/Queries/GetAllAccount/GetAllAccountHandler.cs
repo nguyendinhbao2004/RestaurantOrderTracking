@@ -18,9 +18,12 @@ namespace Application.Feature.Account.Queries.GetAllAccount
         
         public async Task<PagedResult<AccountResponse>> Handle(GetAllAccountQueries request, CancellationToken cancellationToken)
         {
+            Console.WriteLine($"Request PageIndex: {request.PageIndex}");
+            Console.WriteLine($"Request PageSize: {request.PageSize}");
             var (accounts, totalCount) = await _accountRepository.GetPageAccountAsync(request.Keyword, request.PageIndex, request.PageSize);
+
             var accountResponses = _mapper.Map<IEnumerable<AccountResponse>>(accounts).ToList();
-            return new PagedResult<AccountResponse>(accountResponses, totalCount, request.PageIndex, request.PageSize, "Get Account Successfully");
+            return new PagedResult<AccountResponse>(accountResponses, request.PageIndex, request.PageSize, totalCount, "Get Account Successfully");
         }
     }
 }

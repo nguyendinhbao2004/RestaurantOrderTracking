@@ -41,10 +41,10 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
                 query = query.Where(a => a.FullName.Contains(keyword) || a.UserName.Contains(keyword));
             }
             var items = await query
-                .OrderByDescending(a => a.CreatedAt)
-                .Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+               .OrderByDescending(b => b.CreatedAt)
+               .Skip((pageIndex - 1) * pageSize)
+               .Take(pageSize)
+               .ToListAsync();
             var totalCount = await query.CountAsync();
             return (items, totalCount);
         }

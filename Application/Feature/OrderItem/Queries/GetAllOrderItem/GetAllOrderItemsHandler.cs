@@ -21,7 +21,7 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetAllOr
         {
             var (orderItems, totalCount) = await _orderItemRepository.GetPagedOrderItemsAsync(request.Keyword, request.PageIndex, request.PageSize);
             var orderItemResponses = _mapper.Map<List<OrderItemResponse>>(orderItems).ToList();
-            return new PagedResult<OrderItemResponse>(orderItemResponses, totalCount, request.PageIndex, request.PageSize, "Get Order Items Successful");
+            return new PagedResult<OrderItemResponse>(orderItemResponses, request.PageIndex, request.PageSize, totalCount, "Get Order Items Successful");
         }
     }
 }

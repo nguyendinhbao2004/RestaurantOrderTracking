@@ -19,7 +19,7 @@ namespace Application.Feature.Tables.Queries.GetAllTable
         {
             var (tables, totalRecords) = await _tableRepository.GetPagedTablesAsync(request.Keyword, request.PageIndex, request.PageSize);
             var tableResponses = _mapper.Map<List<TableResponse>>(tables);
-            return new PagedResult<TableResponse>(tableResponses, totalRecords, request.PageIndex, request.PageSize, "Get Table Successfully");
+            return new PagedResult<TableResponse>(tableResponses, request.PageIndex, request.PageSize, totalRecords, "Get Table Successfully");
         }
     }
 }

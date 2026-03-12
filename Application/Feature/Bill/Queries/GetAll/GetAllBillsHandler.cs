@@ -21,7 +21,7 @@ namespace RestaurantOrderTracking.Application.Feature.Bill.Queries.GetAll
         {
             var (bills, totalCount) = await _billRepository.GetPagedBillsAsync(request.Keyword, request.PageIndex, request.PageSize);
             var billResponses = _mapper.Map<List<BillResponse>>(bills);
-            return new PagedResult<BillResponse>(billResponses, totalCount, request.PageIndex, request.PageSize, "Get Bills Successfully");
+            return new PagedResult<BillResponse>(billResponses, request.PageIndex, request.PageSize, totalCount, "Get Bills Successfully");
         }
     }
 }

@@ -22,7 +22,7 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Queries.GetAllOrder
         {
             var (orders, totalCount) = await _orderRepository.GetPagedOrdersAsync(request.Keyword, request.PageIndex, request.PageSize);
             var orderResponses = _mapper.Map<List<OrderResponse>>(orders).ToList();
-            return new PagedResult<OrderResponse>(orderResponses, totalCount, request.PageIndex, request.PageSize, "Get Order Successfull");
+            return new PagedResult<OrderResponse>(orderResponses, request.PageIndex, request.PageSize, totalCount, "Get Order Successfull");
         }
     }
 }
