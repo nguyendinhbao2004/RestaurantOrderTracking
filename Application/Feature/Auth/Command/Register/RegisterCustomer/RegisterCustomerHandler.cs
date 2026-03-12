@@ -13,10 +13,10 @@ namespace Application.Feature.Auth.Command.Register.RegisterCustomer
     public class RegisterCustomerHandler : IRequestHandler<RegisterCustomerCommand, Result<string>>
     {
         private readonly IAccountRepository _accountRepository;
-        private readonly IGenericRepository<Customer> _customerRepository;
+        private readonly ICustomerRepository _customerRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public RegisterCustomerHandler(IAccountRepository accountRepository, IGenericRepository<Customer> customerRepository, IUnitOfWork unitOfWork)
+        public RegisterCustomerHandler(IAccountRepository accountRepository, ICustomerRepository customerRepository, IUnitOfWork unitOfWork)
         {
             _accountRepository = accountRepository;
             _customerRepository = customerRepository;
@@ -28,6 +28,10 @@ namespace Application.Feature.Auth.Command.Register.RegisterCustomer
             if (existingAccount != null)
             {
                 return Result<string>.Failure("Username already exists.");
+            }
+            var existingCustomer = await _customerRepository.GetByPhoneAsync(request.Phone);
+            if (existingCustomer != null) {
+                return Result<string>.Failure("Phone number already exists.");
             }
             var hashedPassword = _accountRepository.HashPassword(request.Password);
             var account = new RestaurantOrderTracking.Domain.Entities.Account(
