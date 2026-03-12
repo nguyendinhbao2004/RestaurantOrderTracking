@@ -1,10 +1,11 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantOrderTracking.Application.Feature.Order.Commands.Create;
 using RestaurantOrderTracking.Application.Feature.Order.Commands.CreateOnline;
 using RestaurantOrderTracking.Application.Feature.Order.Commands.Update.UpdateInfo;
 using RestaurantOrderTracking.Application.Feature.Order.Commands.Update.UpdateStatus;
+using RestaurantOrderTracking.Application.Feature.Order.Queries.GetOrderById;
 
 namespace RestaurantOrderTracking.WebApi.Controllers
 {
@@ -37,6 +38,29 @@ namespace RestaurantOrderTracking.WebApi.Controllers
             var query = new Application.Feature.Order.Queries.GetAllOrder.GetAllOrderQueries(keyword, pageIndex, pageSize);
             var result = await _mediator.Send(query);
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Retrieves full details of a single order by its ID,
+        /// including all order items with product name, chef name and waiter name.
+        /// </summary>
+        /// <param name="id">The order ID.</param>
+        /// <returns>Full order detail including all order items.</returns>
+        /// <response code="200">Returns the full order detail.</response>
+        /// <response code="404">Order not found.</response>
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetOrderById([FromRoute] Guid id)
+        {
+            var query = new GetOrderByIdQuery(id);
+            try
+            {
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
         /// <summary>
         /// Creates a new order.
