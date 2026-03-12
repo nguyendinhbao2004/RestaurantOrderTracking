@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantOrderTracking.Application.Feature.Order.Commands.Create;
+using RestaurantOrderTracking.Application.Feature.Order.Commands.CreateOnline;
 using RestaurantOrderTracking.Application.Feature.Order.Commands.Update.UpdateInfo;
 using RestaurantOrderTracking.Application.Feature.Order.Commands.Update.UpdateStatus;
 
@@ -79,6 +80,25 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         [HttpPut("Update-Status")]
         public async Task<IActionResult> UpdateOrderStatus(
             [FromBody] UpdateStatusOrderCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            if (result.Succeeded)
+                return Ok(result);
+
+            return BadRequest(result.Errors);
+        }
+
+        /// <summary>
+        /// Tạo đơn hàng online từ khách hàng đặt tại nhà.
+        /// Tự động tạo Customer, Order (TableId=null, OrderType=Delivery, Status=Pending) và các OrderItem.
+        /// </summary>
+        /// <param name="command">Thông tin khách hàng và danh sách sản phẩm</param>
+        /// <returns>Id của Order vừa được tạo</returns>
+        /// <response code="200">Tạo đơn hàng online thành công</response>
+        /// <response code="400">Dữ liệu không hợp lệ</response>
+        [HttpPost("online")]
+        public async Task<IActionResult> CreateOnlineOrder([FromBody] CreateOnlineOrderCommand command)
         {
             var result = await _mediator.Send(command);
 

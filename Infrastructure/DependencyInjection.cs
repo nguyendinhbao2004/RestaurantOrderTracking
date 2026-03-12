@@ -47,6 +47,7 @@ namespace RestaurantOrderTracking.Infrastructure
             // QR Code Service
             services.AddScoped<RestaurantOrderTracking.Domain.Interface.IQRCodeService, QRCodeService>();
             services.AddScoped<IWorkScheduleRepository, WorkScheduleRepository>();
+            services.AddScoped<ICustomerRepository, CustomerRepository>();
 
             return services;
         }
