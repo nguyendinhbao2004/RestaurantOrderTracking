@@ -53,6 +53,15 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
                     .ThenInclude(oi => oi.WaiterAccount)
                 .FirstOrDefaultAsync(o => o.Id == orderId);
         }
+        public async Task<int> GetTotalOrdersCountAsync()
+        {
+            return await _dbSet.CountAsync();
+        }
+
+        public async Task<int> GetPendingOrdersCountAsync()
+        {
+            return await _dbSet.CountAsync(o => o.Status == OrderStatus.Pending);
+        }
     }
 }
 

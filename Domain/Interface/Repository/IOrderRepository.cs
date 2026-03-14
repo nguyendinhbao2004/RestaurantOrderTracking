@@ -10,5 +10,7 @@ namespace RestaurantOrderTracking.Domain.Interface.Repository
         Task<(IEnumerable<Order>, int totalCount)> GetPagedOrdersAsync(string? keyword, int pageIndex, int pageSize);
         Task<bool> TableHasActiveOrder(Guid tableId);
         Task<Order?> GetOrderByIdWithDetailsAsync(Guid orderId);
+        Task<int> GetTotalOrdersCountAsync();
+        Task<int> GetPendingOrdersCountAsync();
     }
 }

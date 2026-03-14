@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using RestaurantOrderTracking.Domain.Entities;
 
@@ -31,10 +31,37 @@ namespace RestaurantOrderTracking.Infrastructure.Data
         public DbSet<Waiter> Waiters { get; set; } = null!;
         public DbSet<WorkSchedule> WorkSchedules { get; set; } = null!;
         public DbSet<QRSession> QRSessions { get; set; } = null!;
+        public DbSet<PaymentTransaction> PaymentTransactions { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // ==================== PAYMENT TRANSACTION ====================
+            modelBuilder.Entity<PaymentTransaction>(entity =>
+            {
+                entity.HasOne(pt => pt.Bill)
+                    .WithOne()
+                    .HasForeignKey<PaymentTransaction>(pt => pt.BillId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(pt => pt.OrderCode)
+                    .IsRequired();
+
+                entity.Property(pt => pt.Amount)
+                    .HasColumnType("decimal(18,2)")
+                    .IsRequired();
+
+                entity.Property(pt => pt.Status)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(pt => pt.PaymentLinkId)
+                    .HasMaxLength(250);
+
+                entity.HasIndex(pt => pt.OrderCode)
+                    .IsUnique();
+            });
 
             // ==================== ROLE ====================
             modelBuilder.Entity<Role>(entity =>

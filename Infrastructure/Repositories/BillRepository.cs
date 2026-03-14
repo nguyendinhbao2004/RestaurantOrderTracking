@@ -54,5 +54,11 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
             return await _dbSet
                 .FirstOrDefaultAsync(b => b.OrderId == orderId && b.Status != Domain.Enums.BillStatus.cancelled);
         }
+        public async Task<decimal> GetTotalRevenueAsync()
+        {
+            return await _dbSet
+                .Where(b => b.Status == Domain.Enums.BillStatus.paid)
+                .SumAsync(b => b.FinalAmount);
+        }
     }
 }
