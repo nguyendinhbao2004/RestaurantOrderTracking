@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using RestaurantOrderTracking.Application.Common.Interface;
+using RestaurantOrderTracking.Application.Feature.Payment.Dtos;
 using RestaurantOrderTracking.Domain.Common;
 using RestaurantOrderTracking.Domain.Interface.Repository;
 using RestaurantOrderTracking.Domain.Interface;
@@ -8,61 +10,76 @@ using System.Threading.Tasks;
 
 namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWebhook
 {
+
     public class ProcessWebhookHandler : IRequestHandler<ProcessWebhookCommand, Result<string>>
     {
         private readonly IPayOSService _payOSService;
         private readonly IPaymentTransactionRepository _paymentTransactionRepository;
         private readonly IBillRepository _billRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<ProcessWebhookHandler> _logger;
 
         public ProcessWebhookHandler(
             IPayOSService payOSService,
             IPaymentTransactionRepository paymentTransactionRepository,
             IBillRepository billRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            ILogger<ProcessWebhookHandler> logger)
         {
             _payOSService = payOSService;
             _paymentTransactionRepository = paymentTransactionRepository;
             _billRepository = billRepository;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<Result<string>> Handle(ProcessWebhookCommand request, CancellationToken cancellationToken)
         {
-            var verifiedOrderCode = await _payOSService.VerifyPaymentWebhook(request.WebhookBody);
+            // Xác thực chữ ký HMAC_SHA256
+            var webhookData = _payOSService.VerifyAndExtractWebhookData(request.Payload);
 
-            if (verifiedOrderCode == null)
+            if (webhookData == null)
             {
-                return Result<string>.Failure("Webhook signature verification failed or payment not successful.");
+                _logger.LogWarning("PayOS Webhook bị từ chối do chữ ký không hợp lệ hoặc giao dịch thất bại.");
+                return Result<string>.Failure("Chữ ký webhook không hợp lệ hoặc giao dịch không thành công.");
             }
 
-            // Find transaction
-            var transaction = await _paymentTransactionRepository.GetByOrderCodeAsync(verifiedOrderCode.Value);
+            // Tìm PaymentTransaction trong DB
+            var transaction = await _paymentTransactionRepository.GetByOrderCodeAsync(webhookData.OrderCode);
             if (transaction == null)
             {
-                return Result<string>.Failure("Payment transaction not found in database.");
+                _logger.LogError("Webhook PayOS: Không tìm thấy transaction với orderCode={OrderCode}", webhookData.OrderCode);
+                return Result<string>.Failure("Không tìm thấy giao dịch trong hệ thống.");
             }
 
             if (transaction.Status == "PAID")
             {
-                // Already paid, ignore to be idempotent
-                return Result<string>.Success("Already processed.");
+                _logger.LogInformation("Webhook PayOS: OrderCode={OrderCode} đã được xử lý, bỏ qua.", webhookData.OrderCode);
+                return Result<string>.Success("Giao dịch đã được xử lý trước đó.");
             }
 
-            // Update Transaction
+            // Cập nhật trạng thái PaymentTransaction
             transaction.UpdateStatus("PAID");
 
-            // Update Bill
-            var bill = transaction.Bill;
+            // Cập nhật Bill liên quan
+            var bill = transaction.Bill
+                       ?? await _billRepository.GetByIdAsync(transaction.BillId, cancellationToken);
+
             if (bill != null && bill.Status == Domain.Enums.BillStatus.unpaid)
             {
-                bill.MarkAsPaid(transaction.OrderCode.ToString());
+                // Ghi nhận transactionId từ PayOS
+                bill.MarkAsPaid(webhookData.Reference);
+                // Ghi nhận phương thức thanh toán là chuyển khoản ngân hàng
                 bill.Update(Domain.Enums.PaymentMethod.bank_transfer, bill.Discount);
             }
 
+            // Lưu vào DB
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result<string>.Success("Webhook processed successfully.");
+            _logger.LogInformation("PayOS Webhook xử lý thành công. OrderCode={Code}, Amount={Amount}",
+                webhookData.OrderCode, webhookData.Amount);
+
+            return Result<string>.Success("Xử lý webhook thành công.");
         }
     }
 }

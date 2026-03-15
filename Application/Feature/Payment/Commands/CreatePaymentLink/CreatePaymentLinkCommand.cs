@@ -1,4 +1,5 @@
 using MediatR;
+using RestaurantOrderTracking.Application.Feature.Payment.Dtos;
 using RestaurantOrderTracking.Domain.Common;
 using System;
 
@@ -8,5 +9,5 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.CreatePay
         Guid BillId,
         string CancelUrl,
         string ReturnUrl
-    ) : IRequest<Result<string>>;
+    ) : IRequest<Result<PaymentLinkResponse>>;
 }

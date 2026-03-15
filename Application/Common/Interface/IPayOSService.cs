@@ -1,11 +1,20 @@
+using RestaurantOrderTracking.Application.Feature.Payment.Dtos;
 using System.Threading.Tasks;
 
 namespace RestaurantOrderTracking.Application.Common.Interface
 {
     public interface IPayOSService
     {
-        Task<string> CreatePaymentLink(long orderCode, int amount, string description, string cancelUrl, string returnUrl);
-        // Receives webhook payload as JSON string. Returns the OrderCode if successful and parsed.
-        Task<long?> VerifyPaymentWebhook(string webhookBody);
+        Task<PaymentLinkResponse> CreatePaymentLinkAsync(long orderCode, int amount, string description, string cancelUrl, string returnUrl);
+
+        Task<PaymentLinkInfoResponse> GetPaymentLinkInfoAsync(string paymentLinkId);
+
+        Task<CancelledPaymentLinkResponse> CancelPaymentLinkAsync(string paymentLinkId, string? cancellationReason = null);
+
+        PayOSWebhookData? VerifyAndExtractWebhookData(PayOSWebhookPayload payload);
+
+        Task<bool> ConfirmWebhookUrlAsync(string webhookUrl);
+
+        string ComputeHmacSha256(string data);
     }
 }
