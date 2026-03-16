@@ -35,7 +35,7 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
 
         public async Task<Result<string>> Handle(ProcessWebhookCommand request, CancellationToken cancellationToken)
         {
-            // Xác thực chữ ký HMAC_SHA256
+            // verify signature
             var webhookData = _payOSService.VerifyAndExtractWebhookData(request.Payload);
 
             if (webhookData == null)
@@ -44,7 +44,7 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
                 return Result<string>.Failure("Chữ ký webhook không hợp lệ hoặc giao dịch không thành công.");
             }
 
-            // Tìm PaymentTransaction trong DB
+            // find payment transaction in DB
             var transaction = await _paymentTransactionRepository.GetByOrderCodeAsync(webhookData.OrderCode);
             if (transaction == null)
             {
@@ -58,19 +58,19 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
                 return Result<string>.Success("Giao dịch đã được xử lý trước đó.");
             }
 
-            // Cập nhật trạng thái PaymentTransaction
+            // update payment transaction status
             transaction.UpdateStatus("PAID");
 
-            // Cập nhật Bill liên quan
+            // update bill
             var bill = transaction.Bill
                        ?? await _billRepository.GetByIdAsync(transaction.BillId, cancellationToken);
 
             if (bill != null && bill.Status == Domain.Enums.BillStatus.unpaid)
             {
-                // Ghi nhận transactionId từ PayOS
-                bill.MarkAsPaid(webhookData.Reference);
-                // Ghi nhận phương thức thanh toán là chuyển khoản ngân hàng
+                // record payment method as bank transfer
                 bill.Update(Domain.Enums.PaymentMethod.bank_transfer, bill.Discount);
+                // record transactionId from PayOS and mark as paid
+                bill.MarkAsPaid(webhookData.Reference);
             }
 
             // Lưu vào DB

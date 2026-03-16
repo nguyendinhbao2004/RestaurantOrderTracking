@@ -1,4 +1,4 @@
-﻿using RestaurantOrderTracking.Domain.Common;
+using RestaurantOrderTracking.Domain.Common;
 using RestaurantOrderTracking.Domain.Enums;
 using System;
 
@@ -23,13 +23,14 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         protected Bill() { }
 
-        public Bill(Guid orderId, Guid accountId, decimal amount, PaymentMethod paymentMethod, decimal? discount = null)
+        public Bill(Guid orderId, Guid accountId, decimal amount, PaymentMethod paymentMethod, decimal? discount = null, float tax = 0)
         {
             OrderId = orderId;
             AccountId = accountId;
             Amount = amount;
             Discount = discount;
-            FinalAmount = amount - (discount ?? 0);
+            Tax = tax;
+            FinalAmount = amount * (decimal)(1 + tax) - (discount ?? 0);
             PaymentMethod = paymentMethod;
             Status = BillStatus.unpaid;
         }
@@ -49,7 +50,7 @@ namespace RestaurantOrderTracking.Domain.Entities
         public void ApplyDiscount(decimal discount)
         {
             Discount = discount;
-            FinalAmount = Amount - discount;
+            FinalAmount = Amount * (decimal)(1 + Tax) - discount;
         }
 
         public void Update(PaymentMethod? paymentMethod, decimal? discount)
@@ -63,7 +64,7 @@ namespace RestaurantOrderTracking.Domain.Entities
             if (discount.HasValue)
             {
                 Discount = discount.Value;
-                FinalAmount = Amount - discount.Value;
+                FinalAmount = Amount * (decimal)(1 + Tax) - discount.Value;
             }
         }
 

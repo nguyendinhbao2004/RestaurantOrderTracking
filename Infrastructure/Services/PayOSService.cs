@@ -22,7 +22,6 @@ namespace RestaurantOrderTracking.Infrastructure.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<PayOSService> _logger;
 
-        // Credentials đọc từ Configuration
         private readonly string _clientId;
         private readonly string _apiKey;
         private readonly string _checksumKey;
@@ -37,18 +36,15 @@ namespace RestaurantOrderTracking.Infrastructure.Services
             PropertyNameCaseInsensitive = true
         };
 
-        // Constructor
         public PayOSService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<PayOSService> logger)
         {
             _httpClient = httpClientFactory.CreateClient("PayOS");
             _logger = logger;
 
-            // Đọc credentials từ configuration
             _clientId = configuration["PAYOS_CLIENT_ID"] ?? throw new InvalidOperationException("PAYOS_CLIENT_ID chưa được cấu hình.");
             _apiKey = configuration["PAYOS_API_KEY"] ?? throw new InvalidOperationException("PAYOS_API_KEY chưa được cấu hình.");
             _checksumKey = configuration["PAYOS_CHECKSUM_KEY"] ?? throw new InvalidOperationException("PAYOS_CHECKSUM_KEY chưa được cấu hình.");
 
-            // Cấu hình base address và các header xác thực chung cho tất cả request
             _httpClient.BaseAddress = new Uri(PayOSBaseUrl);
             _httpClient.DefaultRequestHeaders.Add("x-client-id", _clientId);
             _httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
@@ -94,7 +90,6 @@ namespace RestaurantOrderTracking.Infrastructure.Services
 
             _logger.LogInformation("PayOS CreateLink Response [{Status}]: {Body}", response.StatusCode, rawJson);
 
-            // Deserialize và kiểm tra mã lỗi logic
             var result = JsonSerializer.Deserialize<PayOSApiResponse<PaymentLinkResponse>>(rawJson, JsonOptions)
                          ?? throw new InvalidOperationException("PayOS trả về response rỗng.");
 
@@ -168,35 +163,54 @@ namespace RestaurantOrderTracking.Infrastructure.Services
 
             var data = payload.Data;
 
-            var webhookSignatureFields = new SortedDictionary<string, string>(StringComparer.Ordinal)
-            {
-                { "accountNumber",          data.AccountNumber          },
-                { "amount",                 data.Amount.ToString()       },
-                { "currency",               data.Currency               },
-                { "description",            data.Description            },
-                { "orderCode",              data.OrderCode.ToString()    },
-                { "paymentLinkId",          data.PaymentLinkId          },
-                { "reference",              data.Reference              },
-                { "transactionDateTime",    data.TransactionDateTime    },
-                // Các field nullable — chỉ thêm nếu có giá trị
-                { "counterAccountBankId",   data.CounterAccountBankId   ?? string.Empty },
-                { "counterAccountBankName", data.CounterAccountBankName ?? string.Empty },
-                { "counterAccountName",     data.CounterAccountName     ?? string.Empty },
-                { "counterAccountNumber",   data.CounterAccountNumber   ?? string.Empty },
-                { "virtualAccountName",     data.VirtualAccountName     ?? string.Empty },
-                { "virtualAccountNumber",   data.VirtualAccountNumber   ?? string.Empty },
-            };
+            var webhookSignatureFields = new SortedDictionary<string, string>(StringComparer.Ordinal);
+            var properties = data.GetType().GetProperties();
 
-            // Nối thành chuỗi key=value&key=value
+            foreach (var prop in properties)
+            {
+                // ignore extension data and ignore data
+                if (prop.GetCustomAttributes(typeof(JsonExtensionDataAttribute), false).Any() ||
+                    prop.GetCustomAttributes(typeof(JsonIgnoreAttribute), false).Any())
+                {
+                    continue;
+                }
+
+                // convert property name to camel case
+                string key = char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1);
+
+                var value = prop.GetValue(data);
+                string stringValue = value?.ToString() ?? string.Empty;
+
+                webhookSignatureFields[key] = stringValue;
+            }
+
+            // handle additional data
+            if (data.AdditionalData != null)
+            {
+                foreach (var kvp in data.AdditionalData)
+                {
+                    if (kvp.Value.ValueKind == JsonValueKind.Null ||
+                        kvp.Value.ValueKind == JsonValueKind.Object ||
+                        kvp.Value.ValueKind == JsonValueKind.Array)
+                    {
+                        webhookSignatureFields[kvp.Key] = string.Empty;
+                    }
+                    else
+                    {
+                        webhookSignatureFields[kvp.Key] = kvp.Value.ToString();
+                    }
+                }
+            }
+
+            // join key=value&key=value
             string dataToVerify = string.Join("&", webhookSignatureFields.Select(kvp => $"{kvp.Key}={kvp.Value}"));
 
-            // Tính chữ ký mong đợi từ phía server
+            // compute expected signature
             string expectedSignature = ComputeHmacSha256(dataToVerify);
 
-            _logger.LogDebug("PayOS Webhook - DataToVerify: {Data}", dataToVerify);
-            _logger.LogDebug("PayOS Webhook - Expected: {Expected} | Received: {Received}", expectedSignature, payload.Signature);
+            _logger.LogDebug("PayOS Webhook - DataToVerify: {Data} || Expected: {Expected} || Received: {Received}", dataToVerify, expectedSignature, payload.Signature);
 
-            // So sánh chữ ký bằng constant-time comparison để chống timing attack
+            // compare signature
             bool isValid = CryptographicOperations.FixedTimeEquals(
                 Encoding.UTF8.GetBytes(expectedSignature),
                 Encoding.UTF8.GetBytes(payload.Signature ?? string.Empty)
@@ -208,7 +222,6 @@ namespace RestaurantOrderTracking.Infrastructure.Services
                 return null;
             }
 
-            _logger.LogInformation("PayOS Webhook xác thực thành công. OrderCode: {OrderCode}", data.OrderCode);
             return data;
         }
 

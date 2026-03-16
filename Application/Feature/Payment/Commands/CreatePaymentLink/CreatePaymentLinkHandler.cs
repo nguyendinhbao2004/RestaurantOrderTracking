@@ -32,7 +32,7 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.CreatePay
 
         public async Task<Result<PaymentLinkResponse>> Handle(CreatePaymentLinkCommand request, CancellationToken cancellationToken)
         {
-            // Lấy và kiểm tra Bill
+            // get and check bill
             var bill = await _billRepository.GetByIdAsync(request.BillId, cancellationToken);
             if (bill == null)
                 return Result<PaymentLinkResponse>.Failure("Không tìm thấy hóa đơn.");
@@ -40,22 +40,22 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.CreatePay
             if (bill.Status != Domain.Enums.BillStatus.unpaid)
                 return Result<PaymentLinkResponse>.Failure("Hóa đơn đã được thanh toán hoặc đã bị hủy.");
 
-            // Tạo orderCode duy nhất
+            // create unique orderCode
             string timeString = DateTime.Now.ToString("yyMMddHHmmssfff");
             long orderCode = long.Parse(timeString);
 
-            // Tạo mô tả thanh toán (tối đa 25 ký tự)
+            // create description (max 25 characters)
             string description = $"Bill-{bill.Id.ToString()[..8]}";
             if (description.Length > 25)
                 description = description[..25];
 
-            // Gọi PayOS API tạo link
+            // call PayOS API to create payment link
             PaymentLinkResponse paymentLinkData;
             try
             {
                 paymentLinkData = await _payOSService.CreatePaymentLinkAsync(
                     orderCode,
-                    (int)bill.Amount,
+                    (int)bill.FinalAmount,
                     description,
                     request.CancelUrl,
                     request.ReturnUrl);
@@ -65,14 +65,14 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.CreatePay
                 return Result<PaymentLinkResponse>.Failure($"Tạo link thanh toán thất bại: {ex.Message}");
             }
 
-            // Lưu PaymentTransaction vào database
+            // save payment transaction to database
             var transaction = new PaymentTransaction(
                 billId: bill.Id,
                 orderCode: orderCode,
-                amount: bill.Amount,
+                amount: bill.FinalAmount,
                 status: "PENDING");
 
-            // Lưu PaymentLinkId để dùng cho GetInfo và Cancel
+            // save payment link id for GetInfo and Cancel
             transaction.SetPaymentLinkId(paymentLinkData.PaymentLinkId);
 
             await _paymentTransactionRepository.AddAsync(transaction);
