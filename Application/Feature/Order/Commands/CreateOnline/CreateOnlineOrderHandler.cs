@@ -104,7 +104,7 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Commands.CreateOnlin
             // Khởi tạo Bill
             var bill = new BillEntity(
                 orderId: order.Id,
-                accountId: Guid.Parse("019ced1d-876e-7f94-93fb-92dd934ecee2"),
+                accountId: null,
                 amount: totalAmount,
                 paymentMethod: request.PaymentMethod,
                 discount: null
