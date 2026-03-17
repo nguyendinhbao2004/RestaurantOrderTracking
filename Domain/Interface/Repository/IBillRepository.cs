@@ -10,5 +10,6 @@ namespace RestaurantOrderTracking.Domain.Interface.Repository
         Task<(IEnumerable<Bill>, int totalCount)> GetPagedBillsAsync(string? keyword, int pageIndex, int pageSize);
         Task<Bill?> GetByIdWithDetailsAsync(Guid billId);
         Task<Bill?> GetByOrderIdAsync(Guid orderId);
+        Task<decimal> GetTotalRevenueAsync();
     }
 }

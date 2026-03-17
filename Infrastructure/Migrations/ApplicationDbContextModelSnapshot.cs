@@ -565,6 +565,56 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
                     b.ToTable("OrderItemLogs");
                 });
 
+            modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.PaymentTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("BillId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("OrderCode")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("PaymentLinkId")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BillId")
+                        .IsUnique();
+
+                    b.HasIndex("OrderCode")
+                        .IsUnique();
+
+                    b.ToTable("PaymentTransactions");
+                });
+
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1111,6 +1161,17 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
                     b.Navigation("Account");
 
                     b.Navigation("OrderItem");
+                });
+
+            modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.PaymentTransaction", b =>
+                {
+                    b.HasOne("RestaurantOrderTracking.Domain.Entities.Bill", "Bill")
+                        .WithOne()
+                        .HasForeignKey("RestaurantOrderTracking.Domain.Entities.PaymentTransaction", "BillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bill");
                 });
 
             modelBuilder.Entity("RestaurantOrderTracking.Domain.Entities.Product", b =>

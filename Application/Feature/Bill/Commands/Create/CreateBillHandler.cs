@@ -25,7 +25,7 @@ namespace RestaurantOrderTracking.Application.Feature.Bill.Commands.Create
         public async Task<Result<Guid>> Handle(CreateBillCommand request, CancellationToken cancellationToken)
         {
             // 1. Validate: Order phải tồn tại
-            var order = await _orderRepository.GetByIdAsync(request.OrderId, cancellationToken);
+            var order = await _orderRepository.GetOrderByIdWithDetailsAsync(request.OrderId);
             if (order == null)
                 return Result<Guid>.Failure("Order not found.");
 

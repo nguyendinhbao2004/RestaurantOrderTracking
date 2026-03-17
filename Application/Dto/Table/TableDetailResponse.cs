@@ -1,3 +1,4 @@
+using RestaurantOrderTracking.Application.Dto.Order;
 using RestaurantOrderTracking.Domain.Entities;
 
 namespace Application.Dto.Table
@@ -11,7 +12,7 @@ namespace Application.Dto.Table
         public string? QRCode { get; set; }
         public int Capacity { get; set; }
 
-        public List<Order> Orders { get; set; } = new List<Order>();
+        public List<OrderResponse> Orders { get; set; } = new();
 
     }
 }

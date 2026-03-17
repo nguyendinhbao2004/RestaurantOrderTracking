@@ -1,4 +1,4 @@
-﻿using Domain.Interface.Repository;
+using Domain.Interface.Repository;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +29,7 @@ namespace RestaurantOrderTracking.Infrastructure
             //    )
             //);
 
-            
+
             // Đăng ký các repository ở đây
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -48,6 +48,11 @@ namespace RestaurantOrderTracking.Infrastructure
             services.AddScoped<RestaurantOrderTracking.Domain.Interface.IQRCodeService, QRCodeService>();
             services.AddScoped<IWorkScheduleRepository, WorkScheduleRepository>();
             services.AddScoped<ICustomerRepository, CustomerRepository>();
+            services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
+
+            services.AddHttpClient("PayOS");
+
+            services.AddScoped<RestaurantOrderTracking.Application.Common.Interface.IPayOSService, PayOSService>();
 
             return services;
         }

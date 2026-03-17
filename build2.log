@@ -1,0 +1,7 @@
+D:\SWD\BE\RestaurantOrderTracking\Infrastructure\Services\PayOSService.cs(36,17): error CS1739: The best overload for 'CreatePaymentLinkRequest' does not have a parameter named 'orderCode' [D:\SWD\BE\RestaurantOrderTracking\Infrastructure\RestaurantOrderTracking.Infrastructure.csproj]
+
+Build FAILED.
+    36 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:02.54

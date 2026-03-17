@@ -1,0 +1,8 @@
+D:\SWD\BE\RestaurantOrderTracking\RestaurantOrderTracking\Controllers\PaymentController.cs(50,66): error CS1061: 'Result<string>' does not contain a definition for 'Messages' and no accessible extension method 'Messages' accepting a first argument of type 'Result<string>' could be found (are you missing a using directive or an assembly reference?) [D:\SWD\BE\RestaurantOrderTracking\RestaurantOrderTracking\RestaurantOrderTracking.WebApi.csproj]
+D:\SWD\BE\RestaurantOrderTracking\RestaurantOrderTracking\Controllers\PaymentController.cs(52,71): error CS1061: 'Result<string>' does not contain a definition for 'Messages' and no accessible extension method 'Messages' accepting a first argument of type 'Result<string>' could be found (are you missing a using directive or an assembly reference?) [D:\SWD\BE\RestaurantOrderTracking\RestaurantOrderTracking\RestaurantOrderTracking.WebApi.csproj]
+
+Build FAILED.
+    18 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:03.93
