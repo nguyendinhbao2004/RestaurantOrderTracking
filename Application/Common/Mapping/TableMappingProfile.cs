@@ -17,7 +17,8 @@ namespace RestaurantOrderTracking.Application.Common.Mapping
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.TableNumber, opt => opt.MapFrom(src => src.TableNumber))
                 .ForMember(dest => dest.AreaName, opt => opt.MapFrom(src => src.Area.Name))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest => dest.Capacity, opt => opt.MapFrom(src => src.Capacity));
             
             // Map to TableDetailResponse
             CreateMap<Table, TableDetailResponse>()

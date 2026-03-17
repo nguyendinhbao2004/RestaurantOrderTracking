@@ -10,5 +10,6 @@ namespace RestaurantOrderTracking.Application.Dto.Table
         public string TableNumber { get; set; }
         public string AreaName { get; set; }
         public string Status { get; set; }
+        public int Capacity { get; set; }
     }
 }
