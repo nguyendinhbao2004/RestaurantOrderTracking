@@ -1,9 +1,0 @@
-D:\SWD\BE\RestaurantOrderTracking\Infrastructure\Services\PayOSService.cs(2,7): error CS0246: The type or namespace name 'Net' could not be found (are you missing a using directive or an assembly reference?) [D:\SWD\BE\RestaurantOrderTracking\Infrastructure\RestaurantOrderTracking.Infrastructure.csproj]
-D:\SWD\BE\RestaurantOrderTracking\Infrastructure\Services\PayOSService.cs(3,7): error CS0246: The type or namespace name 'Net' could not be found (are you missing a using directive or an assembly reference?) [D:\SWD\BE\RestaurantOrderTracking\Infrastructure\RestaurantOrderTracking.Infrastructure.csproj]
-D:\SWD\BE\RestaurantOrderTracking\Infrastructure\Services\PayOSService.cs(14,26): error CS0118: 'PayOS' is a namespace but is used like a type [D:\SWD\BE\RestaurantOrderTracking\Infrastructure\RestaurantOrderTracking.Infrastructure.csproj]
-
-Build FAILED.
-    8 Warning(s)
-    3 Error(s)
-
-Time Elapsed 00:00:01.73
