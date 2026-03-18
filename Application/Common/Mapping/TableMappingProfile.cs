@@ -28,7 +28,7 @@ namespace RestaurantOrderTracking.Application.Common.Mapping
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                 .ForMember(dest => dest.QRCode, opt => opt.MapFrom(src => src.QRCode))
                 .ForMember(dest => dest.Capacity, opt => opt.MapFrom(src => src.Capacity))
-                .ForMember(dest => dest.Orders, opt => opt.MapFrom(src => src.Orders));
+                .ForMember(dest => dest.Orders, opt => opt.Ignore());
         }
     }
 }

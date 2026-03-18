@@ -1,18 +1,18 @@
-using RestaurantOrderTracking.Application.Dto.Order;
-using RestaurantOrderTracking.Domain.Entities;
+using System.Text.Json.Serialization;
 
 namespace Application.Dto.Table
 {
     public class TableDetailResponse
     {
         public Guid Id { get; set; }
-        public string TableNumber { get; set; } = null!;
-        public string AreaName { get; set; }
-        public string Status { get; set; }
+        public string TableNumber { get; set; } = string.Empty;
+        public string AreaName { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
         public string? QRCode { get; set; }
         public int Capacity { get; set; }
 
-        public List<OrderResponse> Orders { get; set; } = new();
+        [JsonPropertyName("Orders")]
+        public ActiveOrderDto? Orders { get; set; }
 
     }
 }

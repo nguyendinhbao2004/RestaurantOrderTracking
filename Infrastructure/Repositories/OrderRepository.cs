@@ -36,7 +36,9 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
         {
             return await _dbSet.AnyAsync(o =>
                 o.TableId == tableId &&
-                (o.Status == OrderStatus.Confirmed || o.Status == OrderStatus.Paying));
+                (o.Status == OrderStatus.Confirmed ||
+                 o.Status == OrderStatus.Preparing ||
+                 o.Status == OrderStatus.Paying));
         }
 
         public async Task<Order?> GetOrderByIdWithDetailsAsync(Guid orderId)

@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using RestaurantOrderTracking.Application.Common.Interface;
 using RestaurantOrderTracking.Application.Feature.Payment.Dtos;
 using RestaurantOrderTracking.Domain.Common;
+using RestaurantOrderTracking.Domain.Entities;
+using RestaurantOrderTracking.Domain.Enums;
 using RestaurantOrderTracking.Domain.Interface.Repository;
 using RestaurantOrderTracking.Domain.Interface;
 using System.Threading;
@@ -16,6 +18,9 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
         private readonly IPayOSService _payOSService;
         private readonly IPaymentTransactionRepository _paymentTransactionRepository;
         private readonly IBillRepository _billRepository;
+        private readonly IOrderRepository _orderRepository;
+        private readonly ITableRepository _tableRepository;
+        private readonly IGenericRepository<QRSession> _qrSessionRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ProcessWebhookHandler> _logger;
 
@@ -23,12 +28,18 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
             IPayOSService payOSService,
             IPaymentTransactionRepository paymentTransactionRepository,
             IBillRepository billRepository,
+            IOrderRepository orderRepository,
+            ITableRepository tableRepository,
+            IGenericRepository<QRSession> qrSessionRepository,
             IUnitOfWork unitOfWork,
             ILogger<ProcessWebhookHandler> logger)
         {
             _payOSService = payOSService;
             _paymentTransactionRepository = paymentTransactionRepository;
             _billRepository = billRepository;
+            _orderRepository = orderRepository;
+            _tableRepository = tableRepository;
+            _qrSessionRepository = qrSessionRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
         }
@@ -52,25 +63,75 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
                 return Result<string>.Failure("Không tìm thấy giao dịch trong hệ thống.");
             }
 
-            if (transaction.Status == "PAID")
+            // update payment transaction status
+            if (transaction.Status != "PAID")
             {
-                _logger.LogInformation("Webhook PayOS: OrderCode={OrderCode} đã được xử lý, bỏ qua.", webhookData.OrderCode);
-                return Result<string>.Success("Giao dịch đã được xử lý trước đó.");
+                transaction.UpdateStatus("PAID");
             }
 
-            // update payment transaction status
-            transaction.UpdateStatus("PAID");
-
             // update bill
-            var bill = transaction.Bill
-                       ?? await _billRepository.GetByIdAsync(transaction.BillId, cancellationToken);
+            var bill = await _billRepository.GetByIdWithDetailsAsync(transaction.BillId);
 
-            if (bill != null && bill.Status == Domain.Enums.BillStatus.unpaid)
+            if (bill == null)
+            {
+                _logger.LogError("Webhook PayOS: Không tìm thấy bill với billId={BillId}", transaction.BillId);
+                return Result<string>.Failure("Không tìm thấy hóa đơn trong hệ thống.");
+            }
+
+            if (bill.Status == BillStatus.unpaid)
             {
                 // record payment method as bank transfer
-                bill.Update(Domain.Enums.PaymentMethod.bank_transfer, bill.Discount);
+                bill.Update(PaymentMethod.bank_transfer, bill.Discount);
                 // record transactionId from PayOS and mark as paid
                 bill.MarkAsPaid(webhookData.Reference);
+            }
+
+            var order = bill.Order ?? await _orderRepository.GetByIdAsync(bill.OrderId, cancellationToken);
+            if (order != null)
+            {
+                var isOrderCompleted = order.Status == OrderStatus.Completed;
+
+                if (order.Status != OrderStatus.Completed && order.Status != OrderStatus.Cancelled)
+                {
+                    var canCompleteOrder = order.Status == OrderStatus.Paying ||
+                        (order.OrderTypes == OrderType.Delivery && order.Status == OrderStatus.Delivering);
+
+                    if (canCompleteOrder)
+                    {
+                        order.UpdateStatus(OrderStatus.Completed);
+                        _orderRepository.Update(order, cancellationToken);
+                        isOrderCompleted = true;
+                    }
+                    else
+                    {
+                        _logger.LogWarning(
+                            "Webhook PayOS: Không thể chuyển OrderId={OrderId} từ trạng thái {Status} sang Completed.",
+                            order.Id,
+                            order.Status);
+                    }
+                }
+
+                if (isOrderCompleted && order.OrderTypes == OrderType.DineIn && order.TableId.HasValue)
+                {
+                    var table = await _tableRepository.GetByIdAsync(order.TableId.Value);
+                    if (table != null)
+                    {
+                        table.SetAvailable();
+                        _tableRepository.Update(table, cancellationToken);
+
+                        var oldSessions = await _qrSessionRepository.FindAsync(
+                            s => s.TableId == table.Id && s.IsActive);
+
+                        foreach (var session in oldSessions)
+                        {
+                            session.Revoke();
+                            _qrSessionRepository.Update(session, cancellationToken);
+                        }
+
+                        var newSession = new QRSession(table.Id);
+                        await _qrSessionRepository.AddAsync(newSession);
+                    }
+                }
             }
 
             // Lưu vào DB
