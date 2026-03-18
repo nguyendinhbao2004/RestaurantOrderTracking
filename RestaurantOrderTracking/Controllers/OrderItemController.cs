@@ -41,7 +41,7 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         /// </summary>
         /// <remarks>
         /// The shared fields (OrderId, OrderChannel, CreatedBy) apply to every item.
-        /// Each entry in Items contains the ProductId and an optional Note.
+        /// Each entry in Items contains ProductId, optional Note, and Quantity.
         /// </remarks>
         /// <param name="command">The create order items request.</param>
         /// <returns>Result of the operation.</returns>

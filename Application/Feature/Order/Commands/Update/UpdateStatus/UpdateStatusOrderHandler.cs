@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using RestaurantOrderTracking.Domain.Common;
+using RestaurantOrderTracking.Domain.Enums;
 using RestaurantOrderTracking.Domain.Interface;
 using RestaurantOrderTracking.Domain.Interface.Repository;
 using System;
@@ -11,12 +12,15 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Commands.Update.Upda
     public class UpdateStatusOrderHandler : IRequestHandler<UpdateStatusOrderCommand, Result<Guid>>
     {
         private readonly IOrderRepository _orderRepository;
+        private readonly ITableRepository _tableRepository;
         private readonly IUnitOfWork _unitOfWork;
         public UpdateStatusOrderHandler(
             IOrderRepository orderRepository,
+            ITableRepository tableRepository,
             IUnitOfWork unitOfWork)
         {
             _orderRepository = orderRepository;
+            _tableRepository = tableRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -36,6 +40,17 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Commands.Update.Upda
             catch (Exception ex)
             {
                 return Result<Guid>.Failure(ex.Message);
+            }
+
+            if ((request.NewStatus == OrderStatus.Completed || request.NewStatus == OrderStatus.Cancelled)
+                && order.TableId.HasValue)
+            {
+                var table = await _tableRepository.GetByIdAsync(order.TableId.Value, cancellationToken);
+                if (table != null)
+                {
+                    table.SetAvailable();
+                    _tableRepository.Update(table, cancellationToken);
+                }
             }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);

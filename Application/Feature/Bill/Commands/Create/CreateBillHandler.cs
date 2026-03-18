@@ -10,15 +10,18 @@ namespace RestaurantOrderTracking.Application.Feature.Bill.Commands.Create
     {
         private readonly IBillRepository _billRepository;
         private readonly IOrderRepository _orderRepository;
+        private readonly IAccountRepository _accountRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public CreateBillHandler(
             IBillRepository billRepository,
             IOrderRepository orderRepository,
+            IAccountRepository accountRepository,
             IUnitOfWork unitOfWork)
         {
             _billRepository = billRepository;
             _orderRepository = orderRepository;
+            _accountRepository = accountRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -29,19 +32,27 @@ namespace RestaurantOrderTracking.Application.Feature.Bill.Commands.Create
             if (order == null)
                 return Result<Guid>.Failure("Order not found.");
 
-            // 2. Validate: Order phải ở trạng thái Paying
+            // 2. Validate: Cashier account phải tồn tại
+            if (request.CashierAccountId == Guid.Empty)
+                return Result<Guid>.Failure("CashierAccountId is required.");
+
+            var cashier = await _accountRepository.GetByIdAsync(request.CashierAccountId, cancellationToken);
+            if (cashier == null)
+                return Result<Guid>.Failure("Cashier account not found.");
+
+            // 3. Validate: Order phải ở trạng thái Paying
             if (order.Status != Domain.Enums.OrderStatus.Paying)
                 return Result<Guid>.Failure("Order must be in 'Paying' status to create a bill.");
 
-            // 3. Validate: Order chưa có bill
+            // 4. Validate: Order chưa có bill
             var existingBill = await _billRepository.GetByOrderIdAsync(request.OrderId);
             if (existingBill != null)
                 return Result<Guid>.Failure("This order already has a bill.");
 
-            // 4. Tính tổng tiền từ order items
+            // 5. Tính tổng tiền từ order items
             var amount = order.CalculateTotal();
 
-            // 5. Tạo Bill
+            // 6. Tạo Bill
             var bill = new BillEntity(
                 orderId: request.OrderId,
                 accountId: request.CashierAccountId,
