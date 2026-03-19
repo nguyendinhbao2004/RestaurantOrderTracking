@@ -1,0 +1,50 @@
+sequenceDiagram
+    autonumber
+    actor Client
+    participant API as WebApi Controllers
+    participant Med as MediatR
+    participant H as Application Handlers
+    participant Repo as Repository/UoW
+    participant DB as PostgreSQL
+    participant PayOS as PayOS Service
+    participant Noti as INotificationService
+    participant Hub as RestaurantHub
+
+    Note over Client,API: API Inventory (grouped)<br/>Auth: login, CreateAccount, CreateWaiter, CreateChef, RegisterCustomer<br/>Account: GetAll<br/>Area/Category/Product: CRUD + status/info update<br/>Table: CRUD + byArea + QR generate/refresh/bySession<br/>Order: list/get/create/update-info/update-status/create-online<br/>OrderItem: list/create/update-info/update-status<br/>Cashier/Bill: list/get/create/update/pay/cancel<br/>Payment: create-link/info/cancel/webhook/confirm-webhook<br/>Customer: getByAccount/update/delete<br/>WorkSchedule: list/create/update/delete/checkin/checkout<br/>Dashboard: summary
+
+    Client->>API: HTTP request
+    API->>Med: Send(Command/Query)
+    Med->>H: Dispatch
+
+    alt Unhappy - validation/auth/business/not-found
+        H-->>Med: Result.Failure(message)
+        Med-->>API: Failure
+        API-->>Client: 400/401/403/404
+    else Happy - standard CRUD/query
+        H->>Repo: Read/Write aggregate
+        Repo->>DB: SQL + COMMIT
+        DB-->>Repo: OK
+        H-->>Med: Result.Success(data)
+        Med-->>API: Success
+        API-->>Client: 200/201
+    end
+
+    rect rgb(235, 245, 255)
+        Note over Client,Hub: Realtime (Order/OrderItem status)
+        H->>Noti: Notify*(targetRoles?)
+        Noti->>Hub: Push to role groups (role:{name})
+        Hub-->>Client: SignalR event
+    end
+
+    rect rgb(245, 255, 235)
+        Note over Client,PayOS: Payment flow (create-link/webhook)
+        H->>PayOS: CreatePaymentLink / VerifyWebhook
+        alt Unhappy - provider/signature/tx/bill invalid
+            H-->>API: Failure
+            API-->>Client: 400/404/500
+        else Happy - payment success
+            H->>Repo: Update Transaction + Bill + Order + Table/QRSession
+            Repo->>DB: COMMIT
+            API-->>Client: 200
+        end
+    end

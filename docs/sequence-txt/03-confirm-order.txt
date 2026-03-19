@@ -1,0 +1,49 @@
+sequenceDiagram
+    title Flow 3 - Confirm Order
+    actor Waiter
+    participant API as WebApi Controllers
+    participant Med as MediatR
+    participant H as Application Handlers
+    participant Repo as Repository/UoW
+    participant DB as PostgreSQL
+    participant Noti as INotificationService
+    participant Hub as RestaurantHub
+
+    Waiter->>API: 1: Request ConfirmOrder
+    activate API
+    API->>Med: 1.1: Redirect Send(Command)
+    activate Med
+    Med->>H: 1.1.1: Dispatch command
+    activate H
+    H->>Repo: 1.1.1.1: Execute confirm order logic
+    activate Repo
+    Repo->>DB: 1.1.1.1.1: Update order status + Commit
+    activate DB
+    DB-->>Repo: 1.1.1.1.2: DB result
+    deactivate DB
+    Repo-->>H: 1.1.1.2: Repository result
+    deactivate Repo
+    H->>Noti: 1.1.1.3: Notify chef group
+    activate Noti
+    Noti->>Hub: 1.1.1.3.1: Push realtime event
+    activate Hub
+    Hub-->>Noti: 1.1.1.3.2: Push result
+    deactivate Hub
+    Noti-->>H: 1.1.1.3.3: Notification result
+    deactivate Noti
+
+    alt 1.2: Order confirmed
+        H-->>Med: 1.2.1: Return Success(Order)
+        Med-->>API: 1.2.2: Return success response
+        API-->>Waiter: 1.2.3: Return ConfirmOrder success
+        Waiter-->>Waiter: 1.2.4: Show success message
+    else 1.3: Order confirmation failed
+        H-->>Med: 1.3.1: Return Failure(Order)
+        Med-->>API: 1.3.2: Return failure response
+        API-->>Waiter: 1.3.3: Return ConfirmOrder failure
+        Waiter-->>Waiter: 1.3.4: Show error message
+    end
+
+    deactivate H
+    deactivate Med
+    deactivate API

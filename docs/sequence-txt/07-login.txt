@@ -1,0 +1,57 @@
+sequenceDiagram
+    title Flow 7 - Login
+    actor User
+    participant API as WebApi Controllers
+    participant Med as MediatR
+    participant H as Application Handlers
+    participant Repo as Repository/UoW
+    participant DB as PostgreSQL
+
+    User->>API: 1: Request Login
+    activate API
+    API->>Med: 1.1: Redirect Send(Command)
+    activate Med
+    Med->>H: 1.1.1: Dispatch command
+    activate H
+    H->>H: 1.1.1.1: Validate login input
+
+    alt 1.2: Invalid email format
+        H-->>Med: 1.2.1: Return Failure(Validation)
+        Med-->>API: 1.2.2: Return validation failure
+        API-->>User: 1.2.3: Return Login failure
+        User-->>User: 1.2.4: Show error message
+    else 1.3: Input valid
+        H->>Repo: 1.3.1: Load account by email
+        activate Repo
+        Repo->>DB: 1.3.1.1: Select account
+        activate DB
+        DB-->>Repo: 1.3.1.2: Account result
+        deactivate DB
+        Repo-->>H: 1.3.2: Repository result
+        deactivate Repo
+        H->>H: 1.3.3: Verify password
+
+        alt 1.4: Credentials valid
+            H->>Repo: 1.4.1: Save refresh token
+            activate Repo
+            Repo->>DB: 1.4.1.1: Insert refresh token + Commit
+            activate DB
+            DB-->>Repo: 1.4.1.2: DB result
+            deactivate DB
+            Repo-->>H: 1.4.2: Repository result
+            deactivate Repo
+            H-->>Med: 1.4.3: Return Success(Auth)
+            Med-->>API: 1.4.4: Return success response
+            API-->>User: 1.4.5: Return Login success
+            User-->>User: 1.4.6: Show success message
+        else 1.5: Wrong email or password
+            H-->>Med: 1.5.1: Return Failure(Auth)
+            Med-->>API: 1.5.2: Return auth failure
+            API-->>User: 1.5.3: Return Login failure
+            User-->>User: 1.5.4: Show error message
+        end
+    end
+
+    deactivate H
+    deactivate Med
+    deactivate API

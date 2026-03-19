@@ -1,0 +1,39 @@
+sequenceDiagram
+    title Flow 2 - Create Order
+    actor Waiter
+    participant API as WebApi Controllers
+    participant Med as MediatR
+    participant H as Application Handlers
+    participant Repo as Repository/UoW
+    participant DB as PostgreSQL
+
+    Waiter->>API: 1: Request CreateOrder
+    activate API
+    API->>Med: 1.1: Redirect Send(Command)
+    activate Med
+    Med->>H: 1.1.1: Dispatch command
+    activate H
+    H->>Repo: 1.1.1.1: Execute create order logic
+    activate Repo
+    Repo->>DB: 1.1.1.1.1: Insert order/items + Commit
+    activate DB
+    DB-->>Repo: 1.1.1.1.2: DB result
+    deactivate DB
+    Repo-->>H: 1.1.1.2: Repository result
+    deactivate Repo
+
+    alt 1.2: Order created
+        H-->>Med: 1.2.1: Return Success(Order)
+        Med-->>API: 1.2.2: Return success response
+        API-->>Waiter: 1.2.3: Return CreateOrder success
+        Waiter-->>Waiter: 1.2.4: Show success message
+    else 1.3: Order creation failed
+        H-->>Med: 1.3.1: Return Failure(Order)
+        Med-->>API: 1.3.2: Return failure response
+        API-->>Waiter: 1.3.3: Return CreateOrder failure
+        Waiter-->>Waiter: 1.3.4: Show error message
+    end
+
+    deactivate H
+    deactivate Med
+    deactivate API

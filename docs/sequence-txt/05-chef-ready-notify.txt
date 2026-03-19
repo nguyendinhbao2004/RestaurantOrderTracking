@@ -1,0 +1,50 @@
+sequenceDiagram
+    title Flow 5 - Mark Item Ready and Notify
+    actor Chef
+    actor Waiter
+    participant API as WebApi Controllers
+    participant Med as MediatR
+    participant H as Application Handlers
+    participant Repo as Repository/UoW
+    participant DB as PostgreSQL
+    participant Noti as INotificationService
+    participant Hub as RestaurantHub
+
+    Chef->>API: 1: Request MarkItemReady
+    activate API
+    API->>Med: 1.1: Redirect Send(Command)
+    activate Med
+    Med->>H: 1.1.1: Dispatch command
+    activate H
+    H->>Repo: 1.1.1.1: Execute ready item logic
+    activate Repo
+    Repo->>DB: 1.1.1.1.1: Update order item status + Commit
+    activate DB
+    DB-->>Repo: 1.1.1.1.2: DB result
+    deactivate DB
+    Repo-->>H: 1.1.1.2: Repository result
+    deactivate Repo
+    H->>Noti: 1.1.1.3: Notify waiter group
+    activate Noti
+    Noti->>Hub: 1.1.1.3.1: Push realtime event
+    activate Hub
+    Hub-->>Waiter: 1.1.1.3.2: Receive OrderItemReady event
+    deactivate Hub
+    Noti-->>H: 1.1.1.3.3: Notification result
+    deactivate Noti
+
+    alt 1.2: Item marked ready
+        H-->>Med: 1.2.1: Return Success(OrderItem)
+        Med-->>API: 1.2.2: Return success response
+        API-->>Chef: 1.2.3: Return MarkItemReady success
+        Chef-->>Chef: 1.2.4: Show success message
+    else 1.3: Mark item ready failed
+        H-->>Med: 1.3.1: Return Failure(OrderItem)
+        Med-->>API: 1.3.2: Return failure response
+        API-->>Chef: 1.3.3: Return MarkItemReady failure
+        Chef-->>Chef: 1.3.4: Show error message
+    end
+
+    deactivate H
+    deactivate Med
+    deactivate API
