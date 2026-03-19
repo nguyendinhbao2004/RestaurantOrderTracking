@@ -32,6 +32,10 @@
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Application\RestaurantOrderTracking.Application.csproj" />
     <ProjectReference Include="..\Domain\RestaurantOrderTracking.Domain.csproj" />

@@ -1,4 +1,5 @@
 using MediatR;
+using RestaurantOrderTracking.Application.Common.Interface;
 using RestaurantOrderTracking.Domain.Common;
 using RestaurantOrderTracking.Domain.Entities;
 using RestaurantOrderTracking.Domain.Enums;
@@ -13,14 +14,18 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
         private readonly IOrderItemLogRepository _orderItemLogRepository;
         private readonly IUnitOfWork _unitOfWork;
 
+        private readonly INotificationService _notificationService;
+
         public UpdateStatusOrderItemHandler(
             IOrderItemRepository orderItemRepository,
             IOrderItemLogRepository orderItemLogRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            INotificationService notificationService)
         {
             _orderItemRepository = orderItemRepository;
             _orderItemLogRepository = orderItemLogRepository;
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
 
         public async Task<Result> Handle(UpdateStatusOrderItemCommand request, CancellationToken cancellationToken)
@@ -31,6 +36,7 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                 return Result.Failure($"OrderItem with ID '{request.OrderItemId}' was not found.");
 
             var previousStatus = orderItem.Status;
+
 
             // 2. Attempt the status transition (domain guards sequential rule & terminal states)
             try
@@ -72,6 +78,12 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
 
             // 5. Save both changes in a single transaction
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            // 6. Send real-time notification about the status change
+            await _notificationService.NotifyOrderStatusChanged(
+                orderId: orderItem.OrderId,
+                previousStatus: previousStatus.ToString(),
+                newStatus: request.NewStatus.ToString(),
+                cancellationToken: cancellationToken);  
 
             return Result.Success($"OrderItem status updated from {previousStatus} to {request.NewStatus} successfully.");
         }

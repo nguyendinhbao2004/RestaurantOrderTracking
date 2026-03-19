@@ -1,0 +1,129 @@
+SignalR Client JS Sample for RestaurantHub (/hubs/restaurant)
+===========================================================
+
+1) Quick browser usage (no build tool)
+--------------------------------------
+Copy this into a HTML file and open in browser.
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>RestaurantHub Client</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+</head>
+<body>
+  <h3>SignalR RestaurantHub Client</h3>
+  <pre id="log"></pre>
+
+  <script>
+    const logEl = document.getElementById("log");
+    const log = (message, payload) => {
+      const time = new Date().toISOString();
+      const line = `[${time}] ${message} ${payload ? JSON.stringify(payload) : ""}`;
+      console.log(line);
+      logEl.textContent += line + "\n";
+    };
+
+    // Replace with your backend URL
+    const API_BASE_URL = "https://localhost:5001";
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(`${API_BASE_URL}/hubs/restaurant`)
+      .withAutomaticReconnect()
+      .build();
+
+    // Event 1: New Order
+    connection.on("NotifyNewOrder", (payload) => {
+      log("NotifyNewOrder", payload);
+      // payload shape:
+      // {
+      //   orderId, orderType, status, createdAt
+      // }
+    });
+
+    // Event 2: Order Status Changed
+    connection.on("NotifyOrderStatusChanged", (payload) => {
+      log("NotifyOrderStatusChanged", payload);
+      // payload shape:
+      // {
+      //   orderId, previousStatus, newStatus, updatedAt
+      // }
+    });
+
+    // Event 3: Payment Success
+    connection.on("NotifyPaymentSuccess", (payload) => {
+      log("NotifyPaymentSuccess", payload);
+      // payload shape:
+      // {
+      //   orderId, amount, paymentMethod, paidAt
+      // }
+    });
+
+    async function start() {
+      try {
+        await connection.start();
+        log("Connected to RestaurantHub");
+      } catch (err) {
+        log("Connection failed, retry in 5s", { error: err?.message });
+        setTimeout(start, 5000);
+      }
+    }
+
+    connection.onreconnecting((err) => log("Reconnecting...", { error: err?.message }));
+    connection.onreconnected((connectionId) => log("Reconnected", { connectionId }));
+    connection.onclose((err) => log("Closed", { error: err?.message }));
+
+    start();
+  </script>
+</body>
+</html>
+
+
+2) React/Vite usage with @microsoft/signalr
+--------------------------------------------
+Install:
+npm i @microsoft/signalr
+
+Example service:
+
+import * as signalR from "@microsoft/signalr";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://localhost:5001";
+
+export const restaurantHub = new signalR.HubConnectionBuilder()
+  .withUrl(`${API_BASE_URL}/hubs/restaurant`)
+  .withAutomaticReconnect()
+  .build();
+
+export async function startRestaurantHub() {
+  if (restaurantHub.state === signalR.HubConnectionState.Disconnected) {
+    await restaurantHub.start();
+  }
+}
+
+restaurantHub.on("NotifyNewOrder", (payload) => {
+  console.log("NotifyNewOrder", payload);
+});
+
+restaurantHub.on("NotifyOrderStatusChanged", (payload) => {
+  console.log("NotifyOrderStatusChanged", payload);
+});
+
+restaurantHub.on("NotifyPaymentSuccess", (payload) => {
+  console.log("NotifyPaymentSuccess", payload);
+});
+
+
+3) CORS note (important)
+------------------------
+In backend appsettings.Development.json make sure your frontend origin is included:
+
+"Cors": {
+  "AllowedOrigins": [
+    "http://localhost:3000",
+    "http://localhost:5173"
+  ]
+}
+
+Then run backend and frontend with matching origin/domain/protocol (http/https).

@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using RestaurantOrderTracking.Application.Common.Interface;
 using RestaurantOrderTracking.Domain.Common;
 using RestaurantOrderTracking.Domain.Enums;
 using RestaurantOrderTracking.Domain.Interface;
@@ -14,14 +15,17 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Commands.Update.Upda
         private readonly IOrderRepository _orderRepository;
         private readonly ITableRepository _tableRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly INotificationService _notificationService;
         public UpdateStatusOrderHandler(
             IOrderRepository orderRepository,
             ITableRepository tableRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            INotificationService notificationService)
         {
             _orderRepository = orderRepository;
             _tableRepository = tableRepository;
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
 
         public async Task<Result<Guid>> Handle(UpdateStatusOrderCommand request, CancellationToken cancellationToken)
@@ -31,6 +35,8 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Commands.Update.Upda
 
             if (order == null)
                 return Result<Guid>.Failure("Order not found.");
+
+            var previousStatus = order.Status;
 
             try
             {
@@ -54,6 +60,12 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Commands.Update.Upda
             }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            await _notificationService.NotifyOrderStatusChanged(
+                order.Id,
+                previousStatus.ToString(),
+                order.Status.ToString(),
+                cancellationToken);
 
             return Result<Guid>.Success("Update Order Status Successfully", order.Id);
         }

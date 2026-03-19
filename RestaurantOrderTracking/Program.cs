@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -6,6 +7,7 @@ using RestaurantOrderTracking.Application;
 using RestaurantOrderTracking.Domain.Common;
 using RestaurantOrderTracking.Infrastructure;
 using RestaurantOrderTracking.Infrastructure.Data;
+using RestaurantOrderTracking.WebApi.Hubs;
 using RestaurantOrderTracking.WebApi.Extensions;
 using RestaurantOrderTracking.WebApi.Middleware;
 using System.Text;
@@ -22,13 +24,25 @@ namespace WebApi
             DotNetEnv.Env.Load();
             var builder = WebApplication.CreateBuilder(args);
             builder.Configuration.AddEnvironmentVariables();
+            var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy(AppConstants.Cors.AllowAll, policy =>
                 {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader();
+                    if (allowedOrigins.Length > 0)
+                    {
+                        policy.WithOrigins(allowedOrigins)
+                              .AllowAnyMethod()
+                              .AllowAnyHeader()
+                              .AllowCredentials();
+                    }
+                    else
+                    {
+                        policy.AllowAnyOrigin()
+                              .AllowAnyMethod()
+                              .AllowAnyHeader();
+                    }
                 });
             });
 
@@ -51,6 +65,8 @@ namespace WebApi
 
             builder.Services.AddInfrastructureServices(builder.Configuration);
             builder.Services.AddApplication();
+            builder.Services.AddSignalR();
+            builder.Services.AddScoped<IHubContext>(sp => (IHubContext)sp.GetRequiredService<IHubContext<RestaurantHub>>());
 
             builder.Services.AddAuthentication(options =>
             {
@@ -177,6 +193,7 @@ namespace WebApi
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
+            app.MapHub<RestaurantHub>("/hubs/restaurant");
 
             app.Run();
         }

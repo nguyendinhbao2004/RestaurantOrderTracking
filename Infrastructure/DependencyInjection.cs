@@ -10,6 +10,7 @@ using RestaurantOrderTracking.Domain.Interface.Repository;
 using RestaurantOrderTracking.Infrastructure.Authentication;
 using RestaurantOrderTracking.Infrastructure.Data;
 using RestaurantOrderTracking.Infrastructure.Repositories;
+using RestaurantOrderTracking.Infrastructure.Services.Notification;
 using RestaurantOrderTracking.Infrastructure.Services;
 using System;
 using System.Collections.Generic;
@@ -53,6 +54,7 @@ namespace RestaurantOrderTracking.Infrastructure
             services.AddHttpClient("PayOS");
 
             services.AddScoped<RestaurantOrderTracking.Application.Common.Interface.IPayOSService, PayOSService>();
+            services.AddScoped<RestaurantOrderTracking.Application.Common.Interface.INotificationService, SignalRNotificationService>();
 
             return services;
         }
