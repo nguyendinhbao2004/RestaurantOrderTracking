@@ -65,9 +65,24 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Commands.Update.Upda
                 order.Id,
                 previousStatus.ToString(),
                 order.Status.ToString(),
+                ResolveTargetRoles(order.Status),
                 cancellationToken);
 
             return Result<Guid>.Success("Update Order Status Successfully", order.Id);
+        }
+
+        private static IEnumerable<string> ResolveTargetRoles(OrderStatus status)
+        {
+            return status switch
+            {
+                OrderStatus.Confirmed => new[] { "Waiter", "Manager" },
+                OrderStatus.Preparing => new[] { "Chef", "Manager" },
+                OrderStatus.Delivering => new[] { "Waiter", "Manager" },
+                OrderStatus.Paying => new[] { "Cashier", "Manager" },
+                OrderStatus.Completed => new[] { "Cashier", "Manager" },
+                OrderStatus.Cancelled => new[] { "Manager", "Waiter", "Cashier" },
+                _ => new[] { "Manager" }
+            };
         }
     }
 }

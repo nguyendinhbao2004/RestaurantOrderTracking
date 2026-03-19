@@ -83,9 +83,23 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                 orderId: orderItem.OrderId,
                 previousStatus: previousStatus.ToString(),
                 newStatus: request.NewStatus.ToString(),
+                targetRoles: ResolveTargetRoles(request.NewStatus),
                 cancellationToken: cancellationToken);  
 
             return Result.Success($"OrderItem status updated from {previousStatus} to {request.NewStatus} successfully.");
+        }
+
+        private static IEnumerable<string> ResolveTargetRoles(OrderItemStatus status)
+        {
+            return status switch
+            {
+                OrderItemStatus.Confirmed => new[] { "Chef", "Manager" },
+                OrderItemStatus.Cooking => new[] { "Chef", "Manager" },
+                OrderItemStatus.Ready => new[] { "Waiter", "Manager" },
+                OrderItemStatus.Delivering => new[] { "Waiter", "Manager" },
+                OrderItemStatus.Served => new[] { "Waiter", "Cashier", "Manager" },
+                _ => new[] { "Manager" }
+            };
         }
     }
 }
