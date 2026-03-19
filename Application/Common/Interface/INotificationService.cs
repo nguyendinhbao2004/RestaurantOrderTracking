@@ -26,6 +26,7 @@ namespace RestaurantOrderTracking.Application.Common.Interface
             decimal amount,
             string paymentMethod,
             IEnumerable<string>? targetRoles = null,
+            IEnumerable<Guid>? targetAccountIds = null,
             CancellationToken cancellationToken = default);
     }
 }

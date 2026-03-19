@@ -5,6 +5,9 @@ using RestaurantOrderTracking.Application.Feature.Payment.Commands.ConfirmWebhoo
 using RestaurantOrderTracking.Application.Feature.Payment.Commands.CreatePaymentLink;
 using RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWebhook;
 using RestaurantOrderTracking.Application.Feature.Payment.Dtos;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using RestaurantOrderTracking.Application.Feature.Payment.Queries.GetPaymentInfo;
 using System.Threading.Tasks;
 
@@ -40,7 +43,11 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         [HttpPost("create-link")]
         public async Task<IActionResult> CreatePaymentLink([FromBody] CreatePaymentLinkRequest dto)
         {
-            var command = new CreatePaymentLinkCommand(dto.BillId, dto.CancelUrl, dto.ReturnUrl);
+            var command = new CreatePaymentLinkCommand(
+                dto.BillId,
+                dto.CancelUrl,
+                dto.ReturnUrl,
+                ResolveCurrentAccountId());
             var result = await _mediator.Send(command);
 
             return result.Succeeded ? Ok(result) : BadRequest(result);
@@ -113,6 +120,18 @@ namespace RestaurantOrderTracking.WebApi.Controllers
             var result = await _mediator.Send(command);
 
             return result.Succeeded ? Ok(result) : BadRequest(result);
+        }
+
+        private Guid? ResolveCurrentAccountId()
+        {
+            if (User?.Identity?.IsAuthenticated != true)
+                return null;
+
+            var accountIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                                 ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                                 ?? User.FindFirstValue("sub");
+
+            return Guid.TryParse(accountIdClaim, out var accountId) ? accountId : null;
         }
     }
 }

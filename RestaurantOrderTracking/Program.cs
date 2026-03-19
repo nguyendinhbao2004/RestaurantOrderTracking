@@ -74,52 +74,66 @@ namespace WebApi
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-.AddJwtBearer(options =>
-{
-    //TokenValidationParameters
-    var jwtSettings = builder.Configuration.GetSection(AppConstants.Jwt.Section);
-   options.TokenValidationParameters = new TokenValidationParameters
-   {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-         ValidIssuer = jwtSettings[AppConstants.Jwt.Issuer],
-         ValidAudience = jwtSettings[AppConstants.Jwt.Audience],
-         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings[AppConstants.Jwt.Secret]))
-   };
+            .AddJwtBearer(options =>
+            {
+                //TokenValidationParameters
+                var jwtSettings = builder.Configuration.GetSection(AppConstants.Jwt.Section);
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtSettings[AppConstants.Jwt.Issuer],
+                    ValidAudience = jwtSettings[AppConstants.Jwt.Audience],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings[AppConstants.Jwt.Secret]))
+                };
 
-    //CUSTOM TRẢ VỀ JSON CHO 401 & 403
-   options.Events = new JwtBearerEvents
-   {
-       // 1. Xử lý khi chưa đăng nhập (401 Unauthorized)
-       OnChallenge = context =>
-       {
-           // Bỏ qua behavior mặc định (trả về header rỗng)
-           context.HandleResponse();
+                //CUSTOM TRẢ VỀ JSON CHO 401 & 403
+                options.Events = new JwtBearerEvents
+                {
+                    // help SignalR hub to get token from query string when connecting
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
 
-           context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-           context.Response.ContentType = "application/json";
+                        if (!string.IsNullOrWhiteSpace(accessToken)
+                            && path.StartsWithSegments("/hubs/restaurant"))
+                        {
+                            context.Token = accessToken;
+                        }
 
-           var result = Result.Failure(AppConstants.Messages.Unauthorized);
-           var json = JsonSerializer.Serialize(result);
+                        return Task.CompletedTask;
+                    },
 
-           return context.Response.WriteAsync(json);
-       },
+                    // 1. Xử lý khi chưa đăng nhập (401 Unauthorized)
+                    OnChallenge = context =>
+                    {
+                        context.HandleResponse();
 
-       // 2. Xử lý khi đăng nhập rồi nhưng không đủ quyền (403 Forbidden)
-       OnForbidden = context =>
-       {
-           context.Response.StatusCode = StatusCodes.Status403Forbidden;
-           context.Response.ContentType = "application/json";
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
 
-           var result = Result.Failure(AppConstants.Messages.Forbidden);
-           var json = JsonSerializer.Serialize(result);
+                        var result = Result.Failure(AppConstants.Messages.Unauthorized);
+                        var json = JsonSerializer.Serialize(result);
 
-           return context.Response.WriteAsync(json);
-       }
-   };
-});
+                        return context.Response.WriteAsync(json);
+                    },
+
+                    // 2. Xử lý khi đăng nhập rồi nhưng không đủ quyền (403 Forbidden)
+                    OnForbidden = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        context.Response.ContentType = "application/json";
+
+                        var result = Result.Failure(AppConstants.Messages.Forbidden);
+                        var json = JsonSerializer.Serialize(result);
+
+                        return context.Response.WriteAsync(json);
+                    }
+                };
+            });
 
             builder.Services.AddAuthorization();
 

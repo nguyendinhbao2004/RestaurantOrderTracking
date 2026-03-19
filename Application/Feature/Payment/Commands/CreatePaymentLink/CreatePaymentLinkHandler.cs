@@ -3,6 +3,7 @@ using RestaurantOrderTracking.Application.Common.Interface;
 using RestaurantOrderTracking.Application.Feature.Payment.Dtos;
 using RestaurantOrderTracking.Domain.Common;
 using RestaurantOrderTracking.Domain.Entities;
+using RestaurantOrderTracking.Domain.Enums;
 using RestaurantOrderTracking.Domain.Interface.Repository;
 using RestaurantOrderTracking.Domain.Interface;
 using System;
@@ -33,12 +34,33 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.CreatePay
         public async Task<Result<PaymentLinkResponse>> Handle(CreatePaymentLinkCommand request, CancellationToken cancellationToken)
         {
             // get and check bill
-            var bill = await _billRepository.GetByIdAsync(request.BillId, cancellationToken);
+            var bill = await _billRepository.GetByIdWithDetailsAsync(request.BillId);
             if (bill == null)
                 return Result<PaymentLinkResponse>.Failure("Không tìm thấy hóa đơn.");
 
             if (bill.Status != Domain.Enums.BillStatus.unpaid)
                 return Result<PaymentLinkResponse>.Failure("Hóa đơn đã được thanh toán hoặc đã bị hủy.");
+
+            if (bill.Order == null)
+                return Result<PaymentLinkResponse>.Failure("Không tìm thấy đơn hàng của hóa đơn.");
+
+            if (bill.Order.OrderTypes == OrderType.Delivery)
+            {
+                if (!request.PayerAccountId.HasValue || request.PayerAccountId.Value == Guid.Empty)
+                {
+                    return Result<PaymentLinkResponse>.Failure(
+                        "Đơn online yêu cầu người dùng đăng nhập để tạo link thanh toán.");
+                }
+
+                try
+                {
+                    bill.AssignAccount(request.PayerAccountId.Value);
+                }
+                catch (Exception ex)
+                {
+                    return Result<PaymentLinkResponse>.Failure(ex.Message);
+                }
+            }
 
             // create unique orderCode
             string timeString = DateTime.Now.ToString("yyMMddHHmmssfff");
