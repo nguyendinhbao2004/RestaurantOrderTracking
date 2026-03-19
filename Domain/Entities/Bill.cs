@@ -68,6 +68,20 @@ namespace RestaurantOrderTracking.Domain.Entities
             }
         }
 
+        public void AssignAccount(Guid accountId)
+        {
+            if (accountId == Guid.Empty)
+                throw new ArgumentException("AccountId is invalid.", nameof(accountId));
+
+            if (Status != BillStatus.unpaid)
+                throw new InvalidOperationException("Cannot assign account for a bill that is not unpaid.");
+
+            if (AccountId.HasValue && AccountId.Value != accountId)
+                throw new InvalidOperationException("Bill account is already assigned to another account.");
+
+            AccountId = accountId;
+        }
+
         public void Refund()
         {
             if (Status != BillStatus.paid)

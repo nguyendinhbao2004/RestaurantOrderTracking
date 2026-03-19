@@ -12,6 +12,7 @@ namespace RestaurantOrderTracking.Infrastructure.Services.Notification
     {
         private readonly IHubContext _hubContext;
         private const string RoleGroupPrefix = "role:";
+        private const string UserGroupPrefix = "user:";
 
         public SignalRNotificationService(IHubContext hubContext)
         {
@@ -55,9 +56,10 @@ namespace RestaurantOrderTracking.Infrastructure.Services.Notification
             decimal amount,
             string paymentMethod,
             IEnumerable<string>? targetRoles = null,
+            IEnumerable<Guid>? targetAccountIds = null,
             CancellationToken cancellationToken = default)
         {
-            await GetClients(targetRoles).SendAsync("NotifyPaymentSuccess", new
+            await GetClients(targetRoles, targetAccountIds).SendAsync("NotifyPaymentSuccess", new
             {
                 OrderId = orderId,
                 Amount = amount,
@@ -66,11 +68,20 @@ namespace RestaurantOrderTracking.Infrastructure.Services.Notification
             }, cancellationToken);
         }
 
-        private IClientProxy GetClients(IEnumerable<string>? targetRoles)
+        private IClientProxy GetClients(IEnumerable<string>? targetRoles, IEnumerable<Guid>? targetAccountIds = null)
         {
-            var groups = (targetRoles ?? Enumerable.Empty<string>())
+            var roleGroups = (targetRoles ?? Enumerable.Empty<string>())
                 .Where(role => !string.IsNullOrWhiteSpace(role))
                 .Select(role => $"{RoleGroupPrefix}{role.Trim().ToLowerInvariant()}")
+                .ToList();
+
+            var accountGroups = (targetAccountIds ?? Enumerable.Empty<Guid>())
+                .Where(accountId => accountId != Guid.Empty)
+                .Select(accountId => $"{UserGroupPrefix}{accountId.ToString("D").ToLowerInvariant()}")
+                .ToList();
+
+            var groups = roleGroups
+                .Concat(accountGroups)
                 .Distinct()
                 .ToList();
 

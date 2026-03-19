@@ -8,6 +8,7 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.CreatePay
     public record CreatePaymentLinkCommand(
         Guid BillId,
         string CancelUrl,
-        string ReturnUrl
+        string ReturnUrl,
+        Guid? PayerAccountId = null
     ) : IRequest<Result<PaymentLinkResponse>>;
 }

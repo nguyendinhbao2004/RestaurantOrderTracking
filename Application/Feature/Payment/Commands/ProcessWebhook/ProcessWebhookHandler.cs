@@ -7,6 +7,7 @@ using RestaurantOrderTracking.Domain.Entities;
 using RestaurantOrderTracking.Domain.Enums;
 using RestaurantOrderTracking.Domain.Interface.Repository;
 using RestaurantOrderTracking.Domain.Interface;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,6 +22,7 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
         private readonly IOrderRepository _orderRepository;
         private readonly ITableRepository _tableRepository;
         private readonly IGenericRepository<QRSession> _qrSessionRepository;
+        private readonly INotificationService _notificationService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ProcessWebhookHandler> _logger;
 
@@ -31,6 +33,7 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
             IOrderRepository orderRepository,
             ITableRepository tableRepository,
             IGenericRepository<QRSession> qrSessionRepository,
+            INotificationService notificationService,
             IUnitOfWork unitOfWork,
             ILogger<ProcessWebhookHandler> logger)
         {
@@ -40,6 +43,7 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
             _orderRepository = orderRepository;
             _tableRepository = tableRepository;
             _qrSessionRepository = qrSessionRepository;
+            _notificationService = notificationService;
             _unitOfWork = unitOfWork;
             _logger = logger;
         }
@@ -63,8 +67,10 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
                 return Result<string>.Failure("Không tìm thấy giao dịch trong hệ thống.");
             }
 
+            var wasTransactionPaid = string.Equals(transaction.Status, "PAID", StringComparison.OrdinalIgnoreCase);
+
             // update payment transaction status
-            if (transaction.Status != "PAID")
+            if (!wasTransactionPaid)
             {
                 transaction.UpdateStatus("PAID");
             }
@@ -78,7 +84,9 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
                 return Result<string>.Failure("Không tìm thấy hóa đơn trong hệ thống.");
             }
 
-            if (bill.Status == BillStatus.unpaid)
+            var wasBillUnpaid = bill.Status == BillStatus.unpaid;
+
+            if (wasBillUnpaid)
             {
                 // record payment method as bank transfer
                 bill.Update(PaymentMethod.bank_transfer, bill.Discount);
@@ -136,6 +144,24 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
 
             // Lưu vào DB
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var shouldNotifyPaymentSuccess = !wasTransactionPaid || wasBillUnpaid;
+
+            if (shouldNotifyPaymentSuccess && bill.AccountId.HasValue)
+            {
+                await _notificationService.NotifyPaymentSuccess(
+                    orderId: bill.OrderId,
+                    amount: bill.FinalAmount,
+                    paymentMethod: bill.PaymentMethod.ToString(),
+                    targetAccountIds: new[] { bill.AccountId.Value },
+                    cancellationToken: cancellationToken);
+            }
+            else if (shouldNotifyPaymentSuccess)
+            {
+                _logger.LogWarning(
+                    "Webhook PayOS: BillId={BillId} không có AccountId nhận thông báo.",
+                    bill.Id);
+            }
 
             _logger.LogInformation("PayOS Webhook xử lý thành công. OrderCode={Code}, Amount={Amount}",
                 webhookData.OrderCode, webhookData.Amount);

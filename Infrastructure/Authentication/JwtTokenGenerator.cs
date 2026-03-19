@@ -38,6 +38,7 @@ namespace RestaurantOrderTracking.Infrastructure.Authentication
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.UniqueName, account.UserName),
                 new Claim("fullName", account.FullName),
                 new Claim(ClaimTypes.Role, roles),
