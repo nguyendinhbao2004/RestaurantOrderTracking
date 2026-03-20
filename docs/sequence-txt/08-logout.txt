@@ -1,47 +1,45 @@
 sequenceDiagram
     title Flow 8 - Logout
     actor User
-    participant API as WebApi Controllers
-    participant Med as MediatR
-    participant H as Application Handlers
+    participant UI as Web/Mobile UI
+    participant Controller as WebApi Controller
+    participant Handler as Feature Handler
     participant Repo as Repository/UoW
     participant DB as PostgreSQL
 
-    User->>API: 1: Request Logout
-    activate API
-    API->>Med: 1.1: Redirect Send(Command)
-    activate Med
-    Med->>H: 1.1.1: Dispatch command
-    activate H
-    H->>Repo: 1.1.1.1: Load refresh token/session
+    User->>UI: 1: Tap Logout
+    activate UI
+    UI->>Controller: 1.1: HTTP POST /api/Auth/logout
+    activate Controller
+    Controller->>Handler: 1.1.1: Invoke LogoutHandler
+    activate Handler
+    Handler->>Repo: 1.1.1.1: Load refresh token/session
     activate Repo
     Repo->>DB: 1.1.1.1.1: Select refresh token by user/session
     activate DB
     DB-->>Repo: 1.1.1.1.2: Token result
     deactivate DB
-    Repo-->>H: 1.1.1.2: Repository result
+    Repo-->>Handler: 1.1.1.1.3: Repository result
     deactivate Repo
-    H->>Repo: 1.1.1.3: Revoke refresh token/session
+    Handler->>Repo: 1.1.1.1.4: Revoke refresh token/session
     activate Repo
-    Repo->>DB: 1.1.1.3.1: Update refresh token status + Commit
+    Repo->>DB: 1.1.1.1.4.1: Update refresh token status + Commit
     activate DB
-    DB-->>Repo: 1.1.1.3.2: DB result
+    DB-->>Repo: 1.1.1.1.4.2: DB result
     deactivate DB
-    Repo-->>H: 1.1.1.4: Repository result
+    Repo-->>Handler: 1.1.1.1.4.3: Repository result
     deactivate Repo
 
     alt 1.2: Logout success
-        H-->>Med: 1.2.1: Return Success(Logout)
-        Med-->>API: 1.2.2: Return success response
-        API-->>User: 1.2.3: Return Logout success
-        User-->>User: 1.2.4: Show success message
+        Handler-->>Controller: 1.2.1: Return Success(Logout)
+        Controller-->>UI: 1.2.2: Return Logout success
+        UI-->>User: 1.2.3: Show success message
     else 1.3: Logout failed
-        H-->>Med: 1.3.1: Return Failure(Logout)
-        Med-->>API: 1.3.2: Return failure response
-        API-->>User: 1.3.3: Return Logout failure
-        User-->>User: 1.3.4: Show error message
+        Handler-->>Controller: 1.3.1: Return Failure(Logout)
+        Controller-->>UI: 1.3.2: Return Logout failure
+        UI-->>User: 1.3.3: Show error message
     end
 
-    deactivate H
-    deactivate Med
-    deactivate API
+    deactivate Handler
+    deactivate Controller
+    deactivate UI

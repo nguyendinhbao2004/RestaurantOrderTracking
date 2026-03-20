@@ -81,39 +81,34 @@ Tai lieu nay tong hop theo phong cach senior: co inventory chuc nang, luong happ
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Client/App
-    participant C as Controller
-    participant P as Pipeline(Validation/Auth)
-    participant M as MediatR
-    participant H as Application Handler
+    actor UI as Client/App
+    participant C as REST Controller
+    participant H as Feature Handler
     participant R as Repository/UoW
     participant DB as PostgreSQL
-    participant W as SignalR Hub
+    participant Hub as SignalR Hub
 
-    U->>C: HTTP request
-    C->>P: Route + model binding + auth check
+    UI->>C: HTTP request (REST/gRPC)
+    C->>H: ExecuteFeature(command/query)
 
-    alt Unhappy - 401/403
-        P-->>U: Unauthorized/Forbidden
-    else Pass auth
-        C->>M: Send(Command/Query)
-        M->>H: Dispatch
-        H->>R: Read/Write aggregate
-        R->>DB: SQL
-        DB-->>R: Result
+    alt Validation/Auth failure
+        H-->>C: Result.Failure(error)
+        C-->>UI: 400/401/403/404
+    else Domain processing
+        H->>R: Load/Save aggregate
+        R->>DB: SQL + COMMIT
+        DB-->>R: Result set
 
-        alt Unhappy - Validation/NotFound/Business rule
-            H-->>M: Result.Failure(message)
-            M-->>C: Failure
-            C-->>U: 400/404 (domain failure)
-        else Happy
-            opt Realtime needed
-                H->>W: INotificationService.Notify*(targetRoles?)
-                W-->>U: SignalR event push
+        alt Domain/Business failure
+            H-->>C: Result.Failure(message)
+            C-->>UI: 400/409
+        else Success
+            opt Need realtime update
+                H->>Hub: NotifyRoleGroups(event)
+                Hub-->>UI: SignalR push
             end
-            H-->>M: Result.Success(data)
-            M-->>C: Success
-            C-->>U: 200/201
+            H-->>C: Result.Success(data)
+            C-->>UI: 200/201
         end
     end
 ```
@@ -125,35 +120,31 @@ sequenceDiagram
     autonumber
     actor User
     participant AuthC as AuthController
-    participant Med as MediatR
     participant LoginH as LoginHandler
-    participant AccRepo as IAccountRepository
-    participant WaiterRepo as IWaiterRepository
-    participant Jwt as IJwtTokenGenerator
-    participant UoW as IUnitOfWork
+    participant AccRepo as AccountRepository
+    participant WaiterRepo as WaiterRepository
+    participant Jwt as JwtTokenService
+    participant UoW as UnitOfWork
     participant DB as PostgreSQL
 
     User->>AuthC: POST /api/Auth/login (username,password)
-    AuthC->>Med: Send(LoginCommand)
-    Med->>LoginH: Handle
+    AuthC->>LoginH: Handle(LoginCommand)
 
     LoginH->>AccRepo: GetByUserNameAsync(username)
     AccRepo->>DB: SELECT account + role
     DB-->>AccRepo: user/null
 
     alt Unhappy - User not found
-        LoginH-->>Med: Failure("Invalid username or password")
-        Med-->>AuthC: Failure
+        LoginH-->>AuthC: Failure("Invalid username or password")
         AuthC-->>User: 400
     else User exists
         LoginH->>AccRepo: CheckPasswordAsync(user,password)
 
         alt Unhappy - Wrong password
-            LoginH-->>Med: Failure("Invalid username or password")
-            Med-->>AuthC: Failure
+            LoginH-->>AuthC: Failure("Invalid username or password")
             AuthC-->>User: 400
         else Password valid
-            LoginH->>Jwt: GenerateToken + GenerateRefreshToken
+            LoginH->>Jwt: GenerateToken + RefreshToken
             LoginH->>AccRepo: Update(user.AddRefreshToken)
             LoginH->>UoW: SaveChangesAsync
             UoW->>DB: COMMIT
@@ -164,9 +155,8 @@ sequenceDiagram
                 DB-->>WaiterRepo: waiter/none
             end
 
-            LoginH-->>Med: Success(AuthResponse)
-            Med-->>AuthC: Success
-            AuthC-->>User: 200 + accessToken + refreshToken
+            LoginH-->>AuthC: Success(AuthResponse)
+            AuthC-->>User: 200 + tokens
         end
     end
 ```
@@ -179,37 +169,33 @@ sequenceDiagram
     actor Staff as Waiter/Chef/Cashier/Manager
     participant OC as OrderController
     participant OIC as OrderItemController
-    participant Med as MediatR
     participant OH as UpdateStatusOrderHandler
     participant OIH as UpdateStatusOrderItemHandler
-    participant OR as IOrderRepository
-    participant OIR as IOrderItemRepository
-    participant LogR as IOrderItemLogRepository
-    participant TR as ITableRepository
-    participant UoW as IUnitOfWork
-    participant NS as INotificationService
+    participant OR as OrderRepository
+    participant OIR as OrderItemRepository
+    participant LogR as OrderItemLogRepository
+    participant TR as TableRepository
+    participant UoW as UnitOfWork
+    participant NS as NotificationService
     participant Hub as RestaurantHub
     participant DB as PostgreSQL
 
-    Note over Staff,Hub: Connection setup: client connect /hubs/restaurant, hub auto add group role:{roleFromJWT}
+    Note over Staff,Hub: Client joins role groups via /hubs/restaurant for realtime updates
 
     par Update Order Status
         Staff->>OC: PUT /api/Order/Update-Status
-        OC->>Med: Send(UpdateStatusOrderCommand)
-        Med->>OH: Handle
+        OC->>OH: Handle(UpdateStatusOrderCommand)
         OH->>OR: GetByIdAsync(orderId)
         OR->>DB: SELECT Order
         DB-->>OR: Order/null
 
         alt Unhappy - Order not found
-            OH-->>Med: Failure("Order not found")
-            Med-->>OC: Failure
+            OH-->>OC: Failure("Order not found")
             OC-->>Staff: 400/404
         else Order found
             OH->>OH: order.UpdateStatus(newStatus)
             alt Unhappy - Invalid transition
-                OH-->>Med: Failure(ex.Message)
-                Med-->>OC: Failure
+                OH-->>OC: Failure(ex.Message)
                 OC-->>Staff: 400
             else Valid
                 opt Completed/Cancelled + has table
@@ -220,46 +206,40 @@ sequenceDiagram
                 end
                 OH->>UoW: SaveChangesAsync
                 UoW->>DB: COMMIT
-                OH->>NS: NotifyOrderStatusChanged(..., targetRoles by status)
-                NS->>Hub: send event to role groups
+                OH->>NS: NotifyOrderStatusChanged(...)
+                NS->>Hub: Push to role groups
                 Hub-->>Staff: SignalR NotifyOrderStatusChanged
-                OH-->>Med: Success
-                Med-->>OC: Success
+                OH-->>OC: Success
                 OC-->>Staff: 200
             end
         end
     and Update OrderItem Status
         Staff->>OIC: PUT /api/OrderItem/{id}/Update-Status
-        OIC->>Med: Send(UpdateStatusOrderItemCommand)
-        Med->>OIH: Handle
+        OIC->>OIH: Handle(UpdateStatusOrderItemCommand)
         OIH->>OIR: GetByIdAsync(orderItemId)
         OIR->>DB: SELECT OrderItem
         DB-->>OIR: OrderItem/null
 
         alt Unhappy - OrderItem not found
-            OIH-->>Med: Failure("OrderItem ... not found")
-            Med-->>OIC: Failure
+            OIH-->>OIC: Failure("OrderItem ... not found")
             OIC-->>Staff: 400/404
         else Found
             OIH->>OIH: UpdateStatus (domain sequential rule)
             alt Unhappy - Invalid transition
-                OIH-->>Med: Failure(ex.Message)
-                Med-->>OIC: Failure
+                OIH-->>OIC: Failure(ex.Message)
                 OIC-->>Staff: 400
             else Valid
                 opt Confirmed->Cooking without assignee
-                    OIH-->>Med: Failure("AssigneeId is required")
-                    Med-->>OIC: Failure
+                    OIH-->>OIC: Failure("AssigneeId is required")
                     OIC-->>Staff: 400
                 else Assignee OK
                     OIH->>LogR: AddAsync(OrderItemLog)
                     OIH->>UoW: SaveChangesAsync
                     UoW->>DB: COMMIT
-                    OIH->>NS: NotifyOrderStatusChanged(orderId,...,targetRoles by item status)
-                    NS->>Hub: send event to role groups
+                    OIH->>NS: NotifyOrderStatusChanged(orderId,...)
+                    NS->>Hub: Push to role groups
                     Hub-->>Staff: SignalR NotifyOrderStatusChanged
-                    OIH-->>Med: Success
-                    Med-->>OIC: Success
+                    OIH-->>OIC: Success
                     OIC-->>Staff: 200
                 end
             end
@@ -274,27 +254,24 @@ sequenceDiagram
     autonumber
     actor Client
     participant PC as PaymentController
-    participant Med as MediatR
     participant CLH as CreatePaymentLinkHandler
     participant WH as ProcessWebhookHandler
-    participant PS as IPayOSService
-    participant PTR as IPaymentTransactionRepository
-    participant BR as IBillRepository
-    participant OR as IOrderRepository
-    participant TR as ITableRepository
-    participant QRR as IGenericRepository<QRSession>
-    participant UoW as IUnitOfWork
+    participant PS as PayOSService
+    participant PTR as PaymentTransactionRepository
+    participant BR as BillRepository
+    participant OR as OrderRepository
+    participant TR as TableRepository
+    participant QRR as QRSessionRepository
+    participant UoW as UnitOfWork
     participant DB as PostgreSQL
 
     Client->>PC: POST /api/Payment/create-link
-    PC->>Med: Send(CreatePaymentLinkCommand)
-    Med->>CLH: Handle
+    PC->>CLH: Handle(CreatePaymentLinkCommand)
     CLH->>PS: CreatePaymentLinkAsync(...)
 
     alt Unhappy - Provider/API error
         PS-->>CLH: exception/failure
-        CLH-->>Med: Failure
-        Med-->>PC: Failure
+        CLH-->>PC: Failure
         PC-->>Client: 400/500
     else Happy
         CLH->>PTR: Save transaction pending
@@ -304,11 +281,10 @@ sequenceDiagram
         PC-->>Client: 200
     end
 
-    Note over Client,DB: Asynchronous callback from PayOS
+    Note over Client,DB: PayOS sends asynchronous webhook callback
 
     Client->>PC: POST /api/Payment/webhook (payload + signature)
-    PC->>Med: Send(ProcessWebhookCommand)
-    Med->>WH: Handle
+    PC->>WH: Handle(ProcessWebhookCommand)
     WH->>PS: VerifyAndExtractWebhookData(payload)
 
     alt Unhappy - Invalid signature or failed payment
@@ -353,19 +329,17 @@ sequenceDiagram
     autonumber
     actor StaffOrCustomer as Staff/Customer App
     participant TC as TableController
-    participant Med as MediatR
     participant GQ as GenerateQRSessionHandler
     participant RQ as RefreshQRSessionHandler
     participant BQ as GetTableBySessionTokenHandler
-    participant TR as ITableRepository
-    participant QRR as IGenericRepository<QRSession>
-    participant QRS as IQRCodeService
-    participant UoW as IUnitOfWork
+    participant TR as TableRepository
+    participant QRR as QRSessionRepository
+    participant QRS as QRCodeService
+    participant UoW as UnitOfWork
     participant DB as PostgreSQL
 
     StaffOrCustomer->>TC: POST /api/Table/qr-session/{tableId}
-    TC->>Med: Send(GenerateQRSessionCommand)
-    Med->>GQ: Handle
+    TC->>GQ: Handle(GenerateQRSessionCommand)
     GQ->>TR: GetByIdAsync(tableId)
     TR->>DB: SELECT table
     DB-->>TR: table/null
@@ -385,20 +359,28 @@ sequenceDiagram
     end
 
     StaffOrCustomer->>TC: PUT /api/Table/qr-session/{tableId}/refresh
-    TC->>Med: Send(RefreshQRSessionCommand)
-    Med->>RQ: Handle refresh same pattern
+    TC->>RQ: Handle(RefreshQRSessionCommand)
+    RQ->>QRR: Validate + revoke old session
+    RQ->>UoW: SaveChanges
+    UoW->>DB: COMMIT
+    RQ-->>TC: Success(new session)
+    TC-->>StaffOrCustomer: 200
 
     StaffOrCustomer->>TC: GET /api/Table/by-session/{sessionToken}
-    TC->>Med: Send(GetTableBySessionTokenQuery)
-    Med->>BQ: Validate token + resolve table
+    TC->>BQ: Handle(GetTableBySessionTokenQuery)
+    BQ->>QRR: Validate token
 
     alt Unhappy - Token invalid/expired/revoked
         BQ-->>TC: Failure
         TC-->>StaffOrCustomer: 400/404
     else Happy
+        BQ->>TR: Load table
+        TR->>DB: SELECT table
+        DB-->>TR: table
         BQ-->>TC: Success(table info)
         TC-->>StaffOrCustomer: 200
     end
+```
 ```
 
 ## 7) Notes for engineering governance

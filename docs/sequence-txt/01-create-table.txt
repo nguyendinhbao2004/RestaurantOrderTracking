@@ -1,39 +1,39 @@
 sequenceDiagram
     title Flow 1 - Create Table
     actor Manager
-    participant API as WebApi Controllers
-    participant Med as MediatR
-    participant H as Application Handlers
+    participant UI as Web/Mobile UI
+    participant Controller as WebApi Controller
+    participant Handler as Feature Handler
     participant Repo as Repository/UoW
     participant DB as PostgreSQL
 
-    Manager->>API: 1: Request CreateTable
-    activate API
-    API->>Med: 1.1: Redirect Send(Command)
-    activate Med
-    Med->>H: 1.1.1: Dispatch command
-    activate H
-    H->>Repo: 1.1.1.1: Execute create table logic
+    Manager->>UI: 1: Trigger CreateTable action
+    activate UI
+    UI->>Controller: 1.1: HTTP POST /api/Table
+    activate Controller
+    Controller->>Handler: 1.1.1: Invoke CreateTableHandler
+    activate Handler
+    Handler->>Repo: 1.1.1.1: Execute create table logic
     activate Repo
     Repo->>DB: 1.1.1.1.1: Insert table + Commit
     activate DB
     DB-->>Repo: 1.1.1.1.2: DB result
     deactivate DB
-    Repo-->>H: 1.1.1.2: Repository result
+    Repo-->>Handler: 1.1.1.1.3: Repository result
     deactivate Repo
 
     alt 1.2: Table created
-        H-->>Med: 1.2.1: Return Success(Table)
-        Med-->>API: 1.2.2: Return success response
-        API-->>Manager: 1.2.3: Return CreateTable success
-        Manager-->>Manager: 1.2.4: Show success message
+        Handler-->>Controller: 1.2.1: Return Success(Table)
+        Controller-->>UI: 1.2.2: Return CreateTable success
+        UI-->>Manager: 1.2.3: Display success toast
+        Manager-->>Manager: 1.2.4: Continue workflow
     else 1.3: Table creation failed
-        H-->>Med: 1.3.1: Return Failure(Table)
-        Med-->>API: 1.3.2: Return failure response
-        API-->>Manager: 1.3.3: Return CreateTable failure
-        Manager-->>Manager: 1.3.4: Show error message
+        Handler-->>Controller: 1.3.1: Return Failure(Table)
+        Controller-->>UI: 1.3.2: Return CreateTable failure
+        UI-->>Manager: 1.3.3: Show error message
+        Manager-->>Manager: 1.3.4: Retry or cancel
     end
 
-    deactivate H
-    deactivate Med
-    deactivate API
+    deactivate Handler
+    deactivate Controller
+    deactivate UI
