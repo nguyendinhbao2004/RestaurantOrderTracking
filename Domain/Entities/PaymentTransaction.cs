@@ -17,6 +17,8 @@ namespace RestaurantOrderTracking.Domain.Entities
         
         public string? PaymentLinkId { get; private set; }
 
+        public PaymentMetadata? PaymentMetadata { get; private set; }
+
         protected PaymentTransaction() { }
 
         public PaymentTransaction(Guid billId, long orderCode, decimal amount, string status = "PENDING")
@@ -35,6 +37,11 @@ namespace RestaurantOrderTracking.Domain.Entities
         public void SetPaymentLinkId(string paymentLinkId)
         {
             PaymentLinkId = paymentLinkId;
+        }
+
+        public void SetPaymentMetadata(PaymentMetadata paymentMetadata)
+        {
+            PaymentMetadata = paymentMetadata;
         }
     }
 }

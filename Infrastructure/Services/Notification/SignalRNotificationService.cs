@@ -13,6 +13,7 @@ namespace RestaurantOrderTracking.Infrastructure.Services.Notification
         private readonly IHubContext _hubContext;
         private const string RoleGroupPrefix = "role:";
         private const string UserGroupPrefix = "user:";
+        private const string OrderCodeGroupPrefix = "order-code:";
 
         public SignalRNotificationService(IHubContext hubContext)
         {
@@ -53,22 +54,26 @@ namespace RestaurantOrderTracking.Infrastructure.Services.Notification
 
         public async Task NotifyPaymentSuccess(
             Guid orderId,
+            long orderCode,
             decimal amount,
             string paymentMethod,
             IEnumerable<string>? targetRoles = null,
             IEnumerable<Guid>? targetAccountIds = null,
+            IEnumerable<long>? targetOrderCodes = null,
             CancellationToken cancellationToken = default)
         {
-            await GetClients(targetRoles, targetAccountIds).SendAsync("NotifyPaymentSuccess", new
+            await GetClients(targetRoles, targetAccountIds, targetOrderCodes).SendAsync("NotifyPaymentSuccess", new
             {
                 OrderId = orderId,
+                OrderCode = orderCode,
                 Amount = amount,
                 PaymentMethod = paymentMethod,
                 PaidAt = DateTime.UtcNow
             }, cancellationToken);
         }
 
-        private IClientProxy GetClients(IEnumerable<string>? targetRoles, IEnumerable<Guid>? targetAccountIds = null)
+        private IClientProxy GetClients( IEnumerable<string>? targetRoles, IEnumerable<Guid>? targetAccountIds = null,
+            IEnumerable<long>? targetOrderCodes = null)
         {
             var roleGroups = (targetRoles ?? Enumerable.Empty<string>())
                 .Where(role => !string.IsNullOrWhiteSpace(role))
@@ -80,8 +85,14 @@ namespace RestaurantOrderTracking.Infrastructure.Services.Notification
                 .Select(accountId => $"{UserGroupPrefix}{accountId.ToString("D").ToLowerInvariant()}")
                 .ToList();
 
+            var orderCodeGroups = (targetOrderCodes ?? Enumerable.Empty<long>())
+                .Where(orderCode => orderCode > 0)
+                .Select(orderCode => $"{OrderCodeGroupPrefix}{orderCode}")
+                .ToList();
+
             var groups = roleGroups
                 .Concat(accountGroups)
+                .Concat(orderCodeGroups)
                 .Distinct()
                 .ToList();
 

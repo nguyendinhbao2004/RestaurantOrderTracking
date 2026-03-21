@@ -61,6 +61,8 @@ namespace RestaurantOrderTracking.Application.Feature.Bill.Commands.Create
                 discount: request.Discount
             );
 
+            bill.CreatedBy = cashier.FullName;
+
             await _billRepository.AddAsync(bill);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

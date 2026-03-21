@@ -44,14 +44,10 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.CreatePay
             if (bill.Order == null)
                 return Result<PaymentLinkResponse>.Failure("Không tìm thấy đơn hàng của hóa đơn.");
 
-            if (bill.Order.OrderTypes == OrderType.Delivery)
+            if (bill.Order.OrderTypes == OrderType.Delivery
+                 && request.PayerAccountId.HasValue
+                 && request.PayerAccountId.Value != Guid.Empty)
             {
-                if (!request.PayerAccountId.HasValue || request.PayerAccountId.Value == Guid.Empty)
-                {
-                    return Result<PaymentLinkResponse>.Failure(
-                        "Đơn online yêu cầu người dùng đăng nhập để tạo link thanh toán.");
-                }
-
                 try
                 {
                     bill.AssignAccount(request.PayerAccountId.Value);
@@ -93,6 +89,15 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.CreatePay
                 orderCode: orderCode,
                 amount: bill.FinalAmount,
                 status: "PENDING");
+
+            transaction.SetPaymentMetadata(new PaymentMetadata
+            {
+                Bin = paymentLinkData.Bin,
+                AccountNumber = paymentLinkData.AccountNumber,
+                AccountName = paymentLinkData.AccountName,
+                Description = paymentLinkData.Description,
+                QrCode = paymentLinkData.QrCode
+            });
 
             // save payment link id for GetInfo and Cancel
             transaction.SetPaymentLinkId(paymentLinkData.PaymentLinkId);

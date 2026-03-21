@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RestaurantOrderTracking.Domain.Entities;
 using RestaurantOrderTracking.Domain.Interface.Repository;
+using System;
 using RestaurantOrderTracking.Infrastructure.Data;
 using System.Threading.Tasks;
 
@@ -17,6 +18,13 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
             return await _context.PaymentTransactions
                 .Include(pt => pt.Bill)
                 .FirstOrDefaultAsync(pt => pt.OrderCode == orderCode);
+        }
+
+        public async Task<PaymentTransaction?> GetByOrderIdAsync(Guid orderId)
+        {
+            return await _context.PaymentTransactions
+                .Include(pt => pt.Bill)
+                .FirstOrDefaultAsync(pt => pt.Bill.OrderId == orderId);
         }
     }
 }

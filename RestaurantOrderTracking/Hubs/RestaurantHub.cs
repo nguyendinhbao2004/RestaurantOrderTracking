@@ -10,6 +10,7 @@ namespace RestaurantOrderTracking.WebApi.Hubs
     {
         private const string RoleGroupPrefix = "role:";
         private const string UserGroupPrefix = "user:";
+        private const string OrderCodeGroupPrefix = "order-code:";
 
         public override async Task OnConnectedAsync()
         {
@@ -40,6 +41,26 @@ namespace RestaurantOrderTracking.WebApi.Hubs
             }
 
             await base.OnConnectedAsync();
+        }
+
+        public async Task SubscribeOrderCode(long orderCode)
+        {
+            if (orderCode <= 0)
+                throw new HubException("OrderCode không hợp lệ.");
+
+            await Groups.AddToGroupAsync(
+                Context.ConnectionId,
+                $"{OrderCodeGroupPrefix}{orderCode}");
+        }
+
+        public async Task UnsubscribeOrderCode(long orderCode)
+        {
+            if (orderCode <= 0)
+                return;
+
+            await Groups.RemoveFromGroupAsync(
+                Context.ConnectionId,
+                $"{OrderCodeGroupPrefix}{orderCode}");
         }
     }
 }

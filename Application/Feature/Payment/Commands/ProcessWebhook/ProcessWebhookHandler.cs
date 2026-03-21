@@ -146,21 +146,35 @@ namespace RestaurantOrderTracking.Application.Feature.Payment.Commands.ProcessWe
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             var shouldNotifyPaymentSuccess = !wasTransactionPaid || wasBillUnpaid;
+            var isDeliveryOrder = (order?.OrderTypes ?? bill.Order?.OrderTypes) == OrderType.Delivery;
 
-            if (shouldNotifyPaymentSuccess && bill.AccountId.HasValue)
+            if (shouldNotifyPaymentSuccess)
             {
-                await _notificationService.NotifyPaymentSuccess(
-                    orderId: bill.OrderId,
-                    amount: bill.FinalAmount,
-                    paymentMethod: bill.PaymentMethod.ToString(),
-                    targetAccountIds: new[] { bill.AccountId.Value },
-                    cancellationToken: cancellationToken);
-            }
-            else if (shouldNotifyPaymentSuccess)
-            {
-                _logger.LogWarning(
-                    "Webhook PayOS: BillId={BillId} không có AccountId nhận thông báo.",
-                    bill.Id);
+                var targetAccountIds = bill.AccountId.HasValue
+                    ? new[] { bill.AccountId.Value }
+                    : Array.Empty<Guid>();
+
+                var targetOrderCodes = isDeliveryOrder
+                    ? new[] { transaction.OrderCode }
+                    : Array.Empty<long>();
+
+                if (targetAccountIds.Length == 0 && targetOrderCodes.Length == 0)
+                {
+                    _logger.LogWarning(
+                        "Webhook PayOS: BillId={BillId} không có target nhận thông báo payment success.",
+                        bill.Id);
+                }
+                else
+                {
+                    await _notificationService.NotifyPaymentSuccess(
+                        orderId: bill.OrderId,
+                        orderCode: transaction.OrderCode,
+                        amount: bill.FinalAmount,
+                        paymentMethod: bill.PaymentMethod.ToString(),
+                        targetAccountIds: targetAccountIds,
+                        targetOrderCodes: targetOrderCodes,
+                        cancellationToken: cancellationToken);
+                }
             }
 
             _logger.LogInformation("PayOS Webhook xử lý thành công. OrderCode={Code}, Amount={Amount}",

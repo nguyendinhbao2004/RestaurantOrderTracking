@@ -9,6 +9,7 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using RestaurantOrderTracking.Application.Feature.Payment.Queries.GetPaymentInfo;
+using RestaurantOrderTracking.Application.Feature.Payment.Queries.GetPaymentInfoByOrderId;
 using System.Threading.Tasks;
 
 namespace RestaurantOrderTracking.WebApi.Controllers
@@ -65,6 +66,15 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         public async Task<IActionResult> GetPaymentInfo([FromRoute] long orderCode)
         {
             var query = new GetPaymentInfoQuery(orderCode);
+            var result = await _mediator.Send(query);
+
+            return result.Succeeded ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpGet("payment-info/{orderId:guid}")]
+        public async Task<IActionResult> GetPaymentInfoByOrderId([FromRoute] Guid orderId)
+        {
+            var query = new GetPaymentInfoByOrderIdQuery(orderId);
             var result = await _mediator.Send(query);
 
             return result.Succeeded ? Ok(result) : BadRequest(result);
