@@ -23,10 +23,12 @@ namespace RestaurantOrderTracking.Application.Common.Interface
 
         Task NotifyPaymentSuccess(
             Guid orderId,
+            long orderCode,
             decimal amount,
             string paymentMethod,
             IEnumerable<string>? targetRoles = null,
             IEnumerable<Guid>? targetAccountIds = null,
+            IEnumerable<long>? targetOrderCodes = null,
             CancellationToken cancellationToken = default);
     }
 }

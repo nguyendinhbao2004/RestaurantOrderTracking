@@ -34,13 +34,13 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         public void CheckIn()
         {
-            ActualCheckIn = DateTime.Now;
+            ActualCheckIn = DateTime.UtcNow;
             Status = WorkScheduleStatus.Present;
         }
 
         public void CheckOut()
         {
-            ActualCheckOut = DateTime.Now;
+            ActualCheckOut = DateTime.UtcNow;
         }
 
         public void MarkAbsent()

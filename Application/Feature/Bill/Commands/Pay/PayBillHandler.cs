@@ -41,7 +41,7 @@ namespace RestaurantOrderTracking.Application.Feature.Bill.Commands.Pay
                 return Result.Failure("Bill is not in unpaid status.");
 
             // 3. Đánh dấu đã thanh toán
-            bill.MarkAsPaid(request.TransactionId);
+            bill.MarkAsPaid();
             _billRepository.Update(bill, cancellationToken);
 
             // 4. Cập nhật Order → Completed

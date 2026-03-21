@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using RestaurantOrderTracking.Domain.Entities;
+using System.Text.Json;
 
 namespace RestaurantOrderTracking.Infrastructure.Data
 {
@@ -58,6 +59,16 @@ namespace RestaurantOrderTracking.Infrastructure.Data
 
                 entity.Property(pt => pt.PaymentLinkId)
                     .HasMaxLength(250);
+
+                entity.Property(pt => pt.PaymentMetadata)
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        metadata => metadata == null
+                            ? null
+                            : JsonSerializer.Serialize(metadata, (JsonSerializerOptions?)null),
+                        json => string.IsNullOrWhiteSpace(json)
+                            ? null
+                            : JsonSerializer.Deserialize<PaymentMetadata>(json, (JsonSerializerOptions?)null));
 
                 entity.HasIndex(pt => pt.OrderCode)
                     .IsUnique();

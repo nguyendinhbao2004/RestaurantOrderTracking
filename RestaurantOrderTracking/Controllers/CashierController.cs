@@ -114,7 +114,7 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         /// <br/>- Set the Order status to 'Completed'
         /// <br/>- Set the Table status to 'Available' (for DineIn orders)
         /// </remarks>
-        /// <param name="command">Payment request containing BillId and optional TransactionId.</param>
+        /// <param name="command">Payment request containing BillId.</param>
         /// <returns>Result of the payment operation.</returns>
         /// <response code="200">Bill paid successfully.</response>
         /// <response code="400">Payment failed.</response>
