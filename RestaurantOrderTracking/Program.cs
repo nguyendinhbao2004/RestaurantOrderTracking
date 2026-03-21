@@ -21,6 +21,8 @@ namespace WebApi
         public static async Task Main(string[] args)
         {
             // Load .env file for environment variables
+
+            //test
             DotNetEnv.Env.Load();
             var builder = WebApplication.CreateBuilder(args);
             builder.Configuration.AddEnvironmentVariables();
