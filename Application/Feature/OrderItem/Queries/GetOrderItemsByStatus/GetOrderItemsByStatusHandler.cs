@@ -29,6 +29,8 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetOrder
                 OrderId = item.OrderId,
                 TableId = item.Order?.TableId,
                 TableNumber = item.Order?.Table?.TableNumber,
+                AreaId = item.Order?.Table?.AreaId,
+                AreaName = item.Order?.Table?.Area?.Name,
                 ProductId = item.ProductId,
                 ProductName = item.Product?.Name ?? string.Empty,
                 ProductPrice = item.Product?.Price ?? 0,
