@@ -52,9 +52,11 @@ namespace RestaurantOrderTracking.Infrastructure
             services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
 
             services.AddHttpClient("PayOS");
+            services.AddHttpClient("OpenAI");
 
             services.AddScoped<RestaurantOrderTracking.Application.Common.Interface.IPayOSService, PayOSService>();
             services.AddScoped<RestaurantOrderTracking.Application.Common.Interface.INotificationService, SignalRNotificationService>();
+            services.AddScoped<RestaurantOrderTracking.Application.Common.Interface.IVoiceCommandAiParser, VoiceCommandAiParser>();
 
             return services;
         }

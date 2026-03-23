@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using RestaurantOrderTracking.Application.Feature.VoiceCommands.Commands.SaveSidecarResult;
 using RestaurantOrderTracking.Application.Feature.VoiceCommands.Dtos;
@@ -9,6 +8,12 @@ namespace RestaurantOrderTracking.Application.Feature.VoiceCommands.Commands.Ups
 {
     public class UpsertVoiceSidecarResultHandler : IRequestHandler<UpsertVoiceSidecarResultCommand, VoiceSidecarUpsertResult>
     {
+        private const int Status200Ok = 200;
+        private const int Status400BadRequest = 400;
+        private const int Status401Unauthorized = 401;
+        private const int Status404NotFound = 404;
+        private const int Status500InternalServerError = 500;
+
         private readonly IMediator _mediator;
         private readonly IConfiguration _configuration;
 
@@ -26,28 +31,28 @@ namespace RestaurantOrderTracking.Application.Feature.VoiceCommands.Commands.Ups
             if (string.IsNullOrWhiteSpace(expectedApiKey))
             {
                 return new VoiceSidecarUpsertResult(
-                    StatusCodes.Status500InternalServerError,
+                    Status500InternalServerError,
                     Result<Guid>.Failure("DOTNET_API_KEY is not configured on .NET API."));
             }
 
             if (!string.Equals(request.ProvidedApiKey, expectedApiKey, StringComparison.Ordinal))
             {
                 return new VoiceSidecarUpsertResult(
-                    StatusCodes.Status401Unauthorized,
+                    Status401Unauthorized,
                     Result<Guid>.Failure("Invalid X-API-Key."));
             }
 
             if (request.Request is null)
             {
                 return new VoiceSidecarUpsertResult(
-                    StatusCodes.Status400BadRequest,
+                    Status400BadRequest,
                     Result<Guid>.Failure("Request body is required."));
             }
 
             if (!request.Request.VoiceCommandId.HasValue)
             {
                 return new VoiceSidecarUpsertResult(
-                    StatusCodes.Status400BadRequest,
+                    Status400BadRequest,
                     Result<Guid>.Failure("VoiceCommandId is required."));
             }
 
@@ -60,15 +65,15 @@ namespace RestaurantOrderTracking.Application.Feature.VoiceCommands.Commands.Ups
             var saveResult = await _mediator.Send(saveCommand, cancellationToken);
             if (saveResult.Succeeded)
             {
-                return new VoiceSidecarUpsertResult(StatusCodes.Status200OK, saveResult);
+                return new VoiceSidecarUpsertResult(Status200Ok, saveResult);
             }
 
             if (saveResult.Errors?.Any(e => e == "VoiceCommand not found.") == true)
             {
-                return new VoiceSidecarUpsertResult(StatusCodes.Status404NotFound, saveResult);
+                return new VoiceSidecarUpsertResult(Status404NotFound, saveResult);
             }
 
-            return new VoiceSidecarUpsertResult(StatusCodes.Status400BadRequest, saveResult);
+            return new VoiceSidecarUpsertResult(Status400BadRequest, saveResult);
         }
     }
 }
