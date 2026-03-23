@@ -13,7 +13,11 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
 
         public async Task<(IEnumerable<OrderItem>, int totalCount)> GetPagedOrderItemsAsync(string? keyword, int pageIndex, int pageSize)
         {
-            var query = _dbSet.Include(oi => oi.Product).AsQueryable();
+            var query = _dbSet
+                .Include(oi => oi.Product)
+                .Include(oi => oi.Order)
+                    .ThenInclude(o => o.Table)
+                .AsQueryable();
 
             if (!string.IsNullOrEmpty(keyword))
             {

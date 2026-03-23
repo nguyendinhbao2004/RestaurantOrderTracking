@@ -5,6 +5,8 @@ using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateInfo;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateStatus;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetAllOrderItem;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetOrderItemsByStatus;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace RestaurantOrderTracking.WebApi.Controllers
 {
@@ -51,7 +53,15 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateOrderItems([FromBody] CreateOrderItemsCommand command)
         {
-            var result = await _mediator.Send(command);
+            var accountIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                                 ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                                 ?? User.FindFirstValue("sub");
+
+            Guid? createdBy = Guid.TryParse(accountIdClaim, out var parsedId) ? parsedId : null;
+
+            var finalCommand = command with { CreatedBy = createdBy };
+
+            var result = await _mediator.Send(finalCommand);
 
             if (result.Succeeded)
                 return Ok(result);
