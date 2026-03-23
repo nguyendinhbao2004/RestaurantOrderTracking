@@ -12,5 +12,6 @@ namespace RestaurantOrderTracking.Application.Dto.OrderItem
         public string? TableNumber { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
+        public string? CreatedByName { get; set; }
     }
 }

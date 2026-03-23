@@ -10,6 +10,7 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
     /// AccountId is nullable — null means the action was performed by a customer.
     /// </summary>
     public record UpdateStatusOrderItemRequest(
+        List<Guid> OrderItemIds,
         OrderItemStatus NewStatus,
         Guid? AccountId,
         string ChangeSource,
@@ -25,7 +26,7 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
     /// - All transitions write an OrderItemLog entry.
     /// </summary>
     public record UpdateStatusOrderItemCommand(
-        Guid OrderItemId,
+        List<Guid> OrderItemIds,
         OrderItemStatus NewStatus,
         Guid? AccountId,
         string ChangeSource,

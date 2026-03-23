@@ -85,11 +85,11 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         /// <returns>Result of the operation.</returns>
         /// <response code="200">Status updated successfully.</response>
         /// <response code="400">Invalid transition, item not found, or missing AssigneeId for chef assignment.</response>
-        [HttpPut("{orderItemId}/Update-Status")]
-        public async Task<IActionResult> UpdateOrderItemStatus([FromRoute] Guid orderItemId, [FromBody] UpdateStatusOrderItemRequest request)
+        [HttpPut("Update-Status")]
+        public async Task<IActionResult> UpdateOrderItemStatus([FromBody] UpdateStatusOrderItemRequest request)
         {
             var command = new UpdateStatusOrderItemCommand(
-                OrderItemId: orderItemId,
+                OrderItemIds: request.OrderItemIds,
                 NewStatus: request.NewStatus,
                 AccountId: request.AccountId,
                 ChangeSource: request.ChangeSource,
