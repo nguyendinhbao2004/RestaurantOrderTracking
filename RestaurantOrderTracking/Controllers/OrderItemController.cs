@@ -4,6 +4,9 @@ using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.Create;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateInfo;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateStatus;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetAllOrderItem;
+using RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetOrderItemsByStatus;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace RestaurantOrderTracking.WebApi.Controllers
 {
@@ -50,7 +53,15 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateOrderItems([FromBody] CreateOrderItemsCommand command)
         {
-            var result = await _mediator.Send(command);
+            var accountIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                                 ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                                 ?? User.FindFirstValue("sub");
+
+            Guid? createdBy = Guid.TryParse(accountIdClaim, out var parsedId) ? parsedId : null;
+
+            var finalCommand = command with { CreatedBy = createdBy };
+
+            var result = await _mediator.Send(finalCommand);
 
             if (result.Succeeded)
                 return Ok(result);
@@ -74,11 +85,11 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         /// <returns>Result of the operation.</returns>
         /// <response code="200">Status updated successfully.</response>
         /// <response code="400">Invalid transition, item not found, or missing AssigneeId for chef assignment.</response>
-        [HttpPut("{orderItemId}/Update-Status")]
-        public async Task<IActionResult> UpdateOrderItemStatus([FromRoute] Guid orderItemId, [FromBody] UpdateStatusOrderItemRequest request)
+        [HttpPut("Update-Status")]
+        public async Task<IActionResult> UpdateOrderItemStatus([FromBody] UpdateStatusOrderItemRequest request)
         {
             var command = new UpdateStatusOrderItemCommand(
-                OrderItemId: orderItemId,
+                OrderItemIds: request.OrderItemIds,
                 NewStatus: request.NewStatus,
                 AccountId: request.AccountId,
                 ChangeSource: request.ChangeSource,
@@ -123,6 +134,19 @@ namespace RestaurantOrderTracking.WebApi.Controllers
                 return Ok(result);
 
             return BadRequest(result.Errors);
+        }
+
+        /// <summary>
+        /// Retrieves a list of order items filtered by a specific status.
+        /// </summary>
+        /// <param name="status">The order item status (e.g. 3 for Ready).</param>
+        /// <returns>A list of order items with full details including their relevant TableId and TableNumber.</returns>
+        [HttpGet("status/{status}")]
+        public async Task<IActionResult> GetOrderItemsByStatus([FromRoute] int status)
+        {
+            var query = new GetOrderItemsByStatusQuery(status);
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
     }
 }

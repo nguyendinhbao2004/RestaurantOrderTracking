@@ -15,7 +15,7 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.Create
     public record CreateOrderItemsCommand(
         Guid OrderId,
         string OrderChannel,
-        Guid CreatedBy,
+        Guid? CreatedBy,
         List<OrderItemEntry> Items
     ) : IRequest<Result>;
 }

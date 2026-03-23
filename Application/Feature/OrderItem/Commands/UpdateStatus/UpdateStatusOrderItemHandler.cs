@@ -30,63 +30,76 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
 
         public async Task<Result> Handle(UpdateStatusOrderItemCommand request, CancellationToken cancellationToken)
         {
-            // 1. Load the order item
-            var orderItem = await _orderItemRepository.GetByIdAsync(request.OrderItemId, cancellationToken);
-            if (orderItem is null)
-                return Result.Failure($"OrderItem with ID '{request.OrderItemId}' was not found.");
+            if (request.OrderItemIds == null || !request.OrderItemIds.Any())
+                return Result.Failure("No OrderItems provided for update.");
 
-            var previousStatus = orderItem.Status;
+            var orderTransitions = new Dictionary<Guid, OrderItemStatus>();
+            var successCount = 0;
 
-
-            // 2. Attempt the status transition (domain guards sequential rule & terminal states)
-            try
+            foreach (var orderItemId in request.OrderItemIds)
             {
-                orderItem.UpdateStatus(request.NewStatus);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Result.Failure(ex.Message);
-            }
+                // 1. Load the order item
+                var orderItem = await _orderItemRepository.GetByIdAsync(orderItemId, cancellationToken);
+                if (orderItem is null)
+                    return Result.Failure($"OrderItem with ID '{orderItemId}' was not found.");
 
-            // 3. Handle assignee based on transition
-            // Confirmed(1) → Cooking(2): chef must be provided
-            if (previousStatus == OrderItemStatus.Confirmed && request.NewStatus == OrderItemStatus.Cooking)
-            {
-                if (!request.AssigneeId.HasValue)
-                    return Result.Failure("AssigneeId (chef) is required when transitioning from Confirmed to Cooking.");
+                var previousStatus = orderItem.Status;
 
-                orderItem.AssignChef(request.AssigneeId.Value);
+                // 2. Attempt the status transition (domain guards sequential rule & terminal states)
+                try
+                {
+                    orderItem.UpdateStatus(request.NewStatus);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Result.Failure($"Failed to update OrderItem '{orderItemId}': " + ex.Message);
+                }
+
+                // 3. Handle assignee based on transition
+                if (previousStatus == OrderItemStatus.Confirmed && request.NewStatus == OrderItemStatus.Cooking)
+                {
+                    if (!request.AssigneeId.HasValue)
+                        return Result.Failure("AssigneeId (chef) is required when transitioning from Confirmed to Cooking.");
+
+                    orderItem.AssignChef(request.AssigneeId.Value);
+                }
+                else if (previousStatus == OrderItemStatus.Ready && request.NewStatus == OrderItemStatus.Delivering)
+                {
+                    if (request.AccountId.HasValue)
+                        orderItem.AssignWaiter(request.AccountId.Value);
+                }
+
+                // 4. Create audit log entry
+                var log = new OrderItemLog(
+                    orderItemId: orderItem.Id,
+                    previousStatus: previousStatus,
+                    newStatus: request.NewStatus,
+                    changeSource: request.ChangeSource,
+                    accountId: request.AccountId
+                );
+
+                await _orderItemLogRepository.AddAsync(log);
+
+                // Track the first known transition for an order's notification
+                orderTransitions.TryAdd(orderItem.OrderId, previousStatus);
+                successCount++;
             }
-            // Ready(3) → Delivering(4): waiter = person doing the action (AccountId)
-            // If AccountId is null (customer action), waiter assignment is skipped
-            else if (previousStatus == OrderItemStatus.Ready && request.NewStatus == OrderItemStatus.Delivering)
-            {
-                if (request.AccountId.HasValue)
-                    orderItem.AssignWaiter(request.AccountId.Value);
-            }
-
-            // 4. Create audit log entry
-            var log = new OrderItemLog(
-                orderItemId: orderItem.Id,
-                previousStatus: previousStatus,
-                newStatus: request.NewStatus,
-                changeSource: request.ChangeSource,
-                accountId: request.AccountId
-            );
-
-            await _orderItemLogRepository.AddAsync(log);
 
             // 5. Save both changes in a single transaction
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            // 6. Send real-time notification about the status change
-            await _notificationService.NotifyOrderStatusChanged(
-                orderId: orderItem.OrderId,
-                previousStatus: previousStatus.ToString(),
-                newStatus: request.NewStatus.ToString(),
-                targetRoles: ResolveTargetRoles(request.NewStatus),
-                cancellationToken: cancellationToken);  
 
-            return Result.Success($"OrderItem status updated from {previousStatus} to {request.NewStatus} successfully.");
+            // 6. Send real-time notification about the status change for each unique order
+            foreach (var kvp in orderTransitions)
+            {
+                await _notificationService.NotifyOrderStatusChanged(
+                    orderId: kvp.Key,
+                    previousStatus: kvp.Value.ToString(),
+                    newStatus: request.NewStatus.ToString(),
+                    targetRoles: ResolveTargetRoles(request.NewStatus),
+                    cancellationToken: cancellationToken);
+            }
+
+            return Result.Success($"{successCount} OrderItem(s) updated to {request.NewStatus} successfully.");
         }
 
         private static IEnumerable<string> ResolveTargetRoles(OrderItemStatus status)

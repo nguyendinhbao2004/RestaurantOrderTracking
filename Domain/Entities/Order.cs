@@ -1,4 +1,4 @@
-﻿using RestaurantOrderTracking.Domain.Common;
+using RestaurantOrderTracking.Domain.Common;
 using RestaurantOrderTracking.Domain.Enums;
 using RestaurantOrderTracking.Domain.Events;
 using System;
@@ -58,13 +58,17 @@ namespace RestaurantOrderTracking.Domain.Entities
             Status = OrderStatus.Pending;
         }
 
-        public void AddItem(Guid productId, Guid accountId, string note, string orderChannel)
+        public void AddItem(Guid productId, Guid? accountId, string note, string orderChannel)
         {
             if (Status == OrderStatus.Paying || Status == OrderStatus.Completed || Status == OrderStatus.Cancelled)
             {
                 throw new InvalidOperationException("Cannot add items to a closed order.");
             }
             var orderItem = new OrderItem(this.Id, productId, orderChannel, note);
+            if (accountId.HasValue)
+            {
+                orderItem.CreatedBy = accountId.Value.ToString();
+            }
             _orderItems.Add(orderItem);
         }
         private bool IsValidTransition(OrderStatus newStatus)

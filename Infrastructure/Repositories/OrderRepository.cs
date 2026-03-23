@@ -45,6 +45,7 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
         {
             return await _dbSet
                 .Include(o => o.Table)
+                    .ThenInclude(t => t.Area)
                 .Include(o => o.Waiter)
                 .Include(o => o.Customer)
                 .Include(o => o.OrderItems)
