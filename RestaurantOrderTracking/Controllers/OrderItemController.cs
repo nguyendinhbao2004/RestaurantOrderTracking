@@ -4,6 +4,7 @@ using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.Create;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateInfo;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateStatus;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetAllOrderItem;
+using RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetOrderItemsByStatus;
 
 namespace RestaurantOrderTracking.WebApi.Controllers
 {
@@ -123,6 +124,19 @@ namespace RestaurantOrderTracking.WebApi.Controllers
                 return Ok(result);
 
             return BadRequest(result.Errors);
+        }
+
+        /// <summary>
+        /// Retrieves a list of order items filtered by a specific status.
+        /// </summary>
+        /// <param name="status">The order item status (e.g. 3 for Ready).</param>
+        /// <returns>A list of order items with full details including their relevant TableId and TableNumber.</returns>
+        [HttpGet("status/{status}")]
+        public async Task<IActionResult> GetOrderItemsByStatus([FromRoute] int status)
+        {
+            var query = new GetOrderItemsByStatusQuery(status);
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
     }
 }

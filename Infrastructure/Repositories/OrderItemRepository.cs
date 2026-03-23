@@ -30,5 +30,18 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
 
             return (items, totalCount);
         }
+
+        public async Task<IEnumerable<OrderItem>> GetOrderItemsByStatusAsync(RestaurantOrderTracking.Domain.Enums.OrderItemStatus status)
+        {
+            return await _dbSet
+                .Include(oi => oi.Order)
+                    .ThenInclude(o => o.Table)
+                .Include(oi => oi.Product)
+                .Include(oi => oi.ChefAccount)
+                .Include(oi => oi.WaiterAccount)
+                .Where(oi => oi.Status == status)
+                .OrderByDescending(oi => oi.CreatedAt)
+                .ToListAsync();
+        }
     }
 }
