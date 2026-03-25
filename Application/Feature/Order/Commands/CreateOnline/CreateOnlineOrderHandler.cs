@@ -89,7 +89,7 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Commands.CreateOnlin
                     {
                         order.AddItem(
                             productId: item.ProductId,
-                            accountId: Guid.Empty,
+                            accountId: null,
                             note: item.Note ?? string.Empty,
                             orderChannel: "Online"
                         );
