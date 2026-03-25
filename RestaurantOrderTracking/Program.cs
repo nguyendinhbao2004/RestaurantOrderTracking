@@ -24,7 +24,21 @@ namespace WebApi
             DotNetEnv.Env.Load();
             var builder = WebApplication.CreateBuilder(args);
             builder.Configuration.AddEnvironmentVariables();
-            var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+
+            var configuredOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                ?? Array.Empty<string>();
+
+            // Support environments that provide origins as a single delimited string.
+            var configuredOriginsRaw = builder.Configuration["Cors:AllowedOrigins"];
+
+            var allowedOrigins = configuredOrigins
+                .Concat(new[] { configuredOriginsRaw ?? string.Empty })
+                .SelectMany(origin => (origin ?? string.Empty).Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                .Where(origin => !string.IsNullOrWhiteSpace(origin))
+                .Where(origin => !(origin.StartsWith("${") && origin.EndsWith("}")))
+                .Where(origin => Uri.TryCreate(origin, UriKind.Absolute, out var parsed) && (parsed.Scheme == Uri.UriSchemeHttp || parsed.Scheme == Uri.UriSchemeHttps))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
 
             builder.Services.AddCors(options =>
             {
@@ -39,9 +53,10 @@ namespace WebApi
                     }
                     else
                     {
-                        policy.AllowAnyOrigin()
+                        policy.SetIsOriginAllowed(_ => true)
                               .AllowAnyMethod()
-                              .AllowAnyHeader();
+                              .AllowAnyHeader()
+                              .AllowCredentials();
                     }
                 });
             });
