@@ -1,6 +1,7 @@
 using MediatR;
 using RestaurantOrderTracking.Application.Dto.Order;
 using RestaurantOrderTracking.Application.Dto.OrderItem;
+using RestaurantOrderTracking.Domain.Common;
 using RestaurantOrderTracking.Domain.Interface.Repository;
 using System;
 using System.Linq;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace RestaurantOrderTracking.Application.Feature.Order.Queries.GetOrderById
 {
-    public class GetOrderByIdHandler : IRequestHandler<GetOrderByIdQuery, OrderDetailResponse>
+    public class GetOrderByIdHandler : IRequestHandler<GetOrderByIdQuery, Result<OrderDetailResponse>>
     {
         private readonly IOrderRepository _orderRepository;
 
@@ -18,12 +19,12 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Queries.GetOrderById
             _orderRepository = orderRepository;
         }
 
-        public async Task<OrderDetailResponse> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
+        public async Task<Result<OrderDetailResponse>> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
         {
             var order = await _orderRepository.GetOrderByIdWithDetailsAsync(request.Id);
 
             if (order is null)
-                throw new KeyNotFoundException($"Order with id {request.Id} not found.");
+                return Result<OrderDetailResponse>.Failure($"Order with id {request.Id} not found.");
 
             var response = new OrderDetailResponse
             {
@@ -61,7 +62,7 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Queries.GetOrderById
                 }).ToList()
             };
 
-            return response;
+            return Result<OrderDetailResponse>.Success(response);
         }
     }
 }
