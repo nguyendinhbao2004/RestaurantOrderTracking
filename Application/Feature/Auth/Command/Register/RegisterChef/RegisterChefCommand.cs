@@ -13,6 +13,5 @@ namespace Application.Feature.Auth.Command.Register.RegisterChef
         public string Password { get; set; }
         public ExpertiseChef Specialty { get; set; }
         public string SkillLevel { get; set; }
-        public string Station { get; set; }
     }
 }

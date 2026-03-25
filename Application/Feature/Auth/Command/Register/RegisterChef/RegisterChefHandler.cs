@@ -39,8 +39,7 @@ namespace Application.Feature.Auth.Command.Register.RegisterChef
             var chef = new Chef(
                 accountId: account.Id,
                 specialty: request.Specialty,
-                skillLevel: request.SkillLevel,
-                station: request.Station
+                skillLevel: request.SkillLevel
             );
             await _chefRepository.AddAsync(chef);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
