@@ -1,9 +1,11 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.Create;
+using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.AssignChef;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateInfo;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateStatus;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetAllOrderItem;
+using RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetConfirmedOrderItems;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetOrderItemsByStatus;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
@@ -147,6 +149,26 @@ namespace RestaurantOrderTracking.WebApi.Controllers
             var query = new GetOrderItemsByStatusQuery(status);
             var result = await _mediator.Send(query);
             return Ok(result);
+        }
+
+        [HttpGet("confirmed")]
+        public async Task<IActionResult> GetConfirmedOrderItems([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+        {
+            var query = new GetConfirmedOrderItemsQuery(pageIndex, pageSize);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        [HttpPost("assign-chef")]
+        public async Task<IActionResult> AssignChefToOrderItem([FromBody] AssignChefToOrderItemRequest request)
+        {
+            var command = new AssignChefToOrderItemCommand(request.OrderItemId, request.AccountId);
+            var result = await _mediator.Send(command);
+
+            if (result.Succeeded)
+                return Ok(result);
+
+            return BadRequest(result.Errors);
         }
     }
 }
