@@ -1,0 +1,15 @@
+using MediatR;
+using RestaurantOrderTracking.Domain.Common;
+
+namespace Application.Feature.Auth.Command.Register.RegisterHeadChef
+{
+    public class RegisterHeadChefCommand : IRequest<Result<string>>
+    {
+        public string UserName { get; set; }
+        public string FullName { get; set; }
+        public string? Img { get; set; }
+        public string Phone { get; set; }
+        public string Password { get; set; }
+        public string SkillLevel { get; set; }
+    }
+}

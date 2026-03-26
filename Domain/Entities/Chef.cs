@@ -14,25 +14,28 @@ namespace RestaurantOrderTracking.Domain.Entities
         public ExpertiseChef Specialty { get; private set; } // Chuyên môn của đầu bếp
         public string SkillLevel { get; private set; } = null!;
         public bool IsAvailable { get; private set; }
-        public string Station { get; private set; } = null!;
+
 
         protected Chef() { }
 
-        public Chef(Guid accountId, ExpertiseChef specialty, string skillLevel, string station)
+        public Chef(Guid accountId, ExpertiseChef specialty, string skillLevel)
         {
             AccountId = accountId;
             Specialty = specialty;
             SkillLevel = skillLevel;
             IsAvailable = true;
-            Station = station;
         }
 
-        public void UpdateChef(ExpertiseChef specialty, string skillLevel, bool isAvailable, string station)
+        public void UpdateChef(ExpertiseChef specialty, string skillLevel, bool isAvailable)
         {
             Specialty = specialty;
             SkillLevel = skillLevel;
             IsAvailable = isAvailable;
-            Station = station;
+        }
+
+        public void UpdateAvailability(bool isAvailable)
+        {
+            IsAvailable = isAvailable;
         }
     }
 }

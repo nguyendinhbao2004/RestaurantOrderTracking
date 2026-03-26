@@ -49,6 +49,24 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
             return (items, totalCount);
         }
 
+        public async Task<IEnumerable<Account>> GetAccountsByRoleAsync(int? roleId, CancellationToken cancellationToken = default)
+        {
+            var query = _dbSet
+                .Include(a => a.Role)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (roleId.HasValue)
+            {
+                query = query.Where(a => a.RoleId == roleId.Value);
+            }
+
+            return await query
+                .OrderBy(a => a.RoleId)
+                .ThenBy(a => a.FullName)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<Account?> GetByUserNameAsync(string userName)
         {
             return await _dbSet.Include(a => a.Role).FirstOrDefaultAsync(a => a.UserName == userName);

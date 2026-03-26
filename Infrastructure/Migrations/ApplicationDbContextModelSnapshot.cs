@@ -247,10 +247,6 @@ namespace RestaurantOrderTracking.Infrastructure.Migrations
                     b.Property<int>("Specialty")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Station")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 

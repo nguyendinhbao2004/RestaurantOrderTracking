@@ -58,7 +58,7 @@ namespace RestaurantOrderTracking.Domain.Entities
             Status = OrderStatus.Pending;
         }
 
-        public void AddItem(Guid productId, Guid? accountId, string note, string orderChannel)
+        public void AddItem(Guid productId, Guid? accountId, string note, string orderChannel, int? categoryId = null)
         {
             if (Status == OrderStatus.Paying || Status == OrderStatus.Completed || Status == OrderStatus.Cancelled)
             {
@@ -69,6 +69,12 @@ namespace RestaurantOrderTracking.Domain.Entities
             {
                 orderItem.CreatedBy = accountId.Value.ToString();
             }
+
+            if (categoryId.HasValue && categoryId.Value == 4)
+            {
+                orderItem.InitializeStatus(OrderItemStatus.Ready); // Status = 3
+            }
+
             _orderItems.Add(orderItem);
         }
         private bool IsValidTransition(OrderStatus newStatus)

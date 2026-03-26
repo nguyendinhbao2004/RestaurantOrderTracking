@@ -1,4 +1,5 @@
 ﻿using Application.Feature.Auth.Command.Register.RegisterChef;
+using Application.Feature.Auth.Command.Register.RegisterHeadChef;
 using Application.Feature.Auth.Command.Register.RegisterCustomer;
 using Application.Feature.Auth.Command.Register.RegisterWaiter;
 using MediatR;
@@ -125,6 +126,32 @@ namespace RestaurantOrderTracking.WebApi.Controllers
         /// <response code="500">Internal Server Error</response>
         [HttpPost("CreateChef")]
         public async Task<IActionResult> CreateChef([FromBody] RegisterChefCommand command)
+        {
+            var result = await _mediator.Send(command);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Creates a new head chef account using the specified registration details.
+        /// </summary>
+        /// <remarks>
+        /// This is an API endpoint to create a new head chef account in the system.
+        /// <br/>
+        /// Locallhost:5015/api/Auth/CreateHeadChef
+        /// <br/>
+        /// `specialty` is always set to `HeadChef = 1` by the server.
+        /// </remarks>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        /// <response code="200">HeadChef Register Successfully</response>
+        /// <response code="400">Bad Request</response>
+        /// <response code="500">Internal Server Error</response>
+        [HttpPost("CreateHeadChef")]
+        public async Task<IActionResult> CreateHeadChef([FromBody] RegisterHeadChefCommand command)
         {
             var result = await _mediator.Send(command);
             if (!result.Succeeded)

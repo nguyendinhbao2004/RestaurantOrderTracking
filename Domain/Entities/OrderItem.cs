@@ -35,6 +35,17 @@ namespace RestaurantOrderTracking.Domain.Entities
         }
 
         /// <summary>
+        /// Used for special cases where status needs to be initialized to Ready (e.g. categoryId = 4)
+        /// </summary>
+        public void InitializeStatus(OrderItemStatus status)
+        {
+            if (Status == OrderItemStatus.Pending)
+            {
+                Status = status;
+            }
+        }
+
+        /// <summary>
         /// Advances status to the next enum value in sequence, or to Cancelled.
         /// </summary>
         public void UpdateStatus(OrderItemStatus newStatus)

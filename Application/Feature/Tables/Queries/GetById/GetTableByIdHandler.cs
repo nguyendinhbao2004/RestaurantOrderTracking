@@ -1,4 +1,5 @@
 using Application.Dto.Table;
+using AutoMapper;
 using MediatR;
 using RestaurantOrderTracking.Domain.Common;
 using RestaurantOrderTracking.Domain.Entities;
@@ -10,10 +11,12 @@ namespace Application.Feature.Tables.Queries.GetById
     public class GetTableByIdHandler : IRequestHandler<GetTableByIdQueries, Result<TableDetailResponse>>
     {
         private readonly ITableRepository _tableRepository;
+        private readonly IMapper _mapper;
 
-        public GetTableByIdHandler(ITableRepository tableRepository)
+        public GetTableByIdHandler(ITableRepository tableRepository, IMapper mapper)
         {
             _tableRepository = tableRepository;
+            _mapper = mapper;
         }
 
         public async Task<Result<TableDetailResponse>> Handle(GetTableByIdQueries request, CancellationToken cancellationToken)
@@ -24,26 +27,14 @@ namespace Application.Feature.Tables.Queries.GetById
                 return Result<TableDetailResponse>.Failure($"Table with ID {request.Id} not found.");
             }
 
-            var activeOrder = table.Orders
-                .Where(order => order.Status != OrderStatus.Completed && order.Status != OrderStatus.Cancelled)
+            // Only get the order with status Confirmed
+            var confirmedOrder = table.Orders
+                .Where(order => order.Status == OrderStatus.Confirmed)
                 .OrderByDescending(order => order.CreatedAt)
                 .FirstOrDefault();
 
-            var hasOccupiedOrder = table.Orders.Any(order =>
-                order.Status == OrderStatus.Confirmed ||
-                order.Status == OrderStatus.Preparing ||
-                order.Status == OrderStatus.Paying);
-
-            var tableDetailResponse = new TableDetailResponse
-            {
-                Id = table.Id,
-                TableNumber = table.TableNumber,
-                AreaName = table.Area?.Name ?? string.Empty,
-                Status = hasOccupiedOrder ? TableStatus.Occupied.ToString() : table.Status.ToString(),
-                QRCode = table.QRCode,
-                Capacity = table.Capacity,
-                Orders = MapActiveOrder(activeOrder)
-            };
+            var tableDetailResponse = _mapper.Map<TableDetailResponse>(table);
+            tableDetailResponse.Orders = MapActiveOrder(confirmedOrder);
 
             return Result<TableDetailResponse>.Success("Get Table Detail Successfully", tableDetailResponse);
         }

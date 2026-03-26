@@ -5,6 +5,7 @@ using RestaurantOrderTracking.Domain.Entities;
 using RestaurantOrderTracking.Domain.Enums;
 using RestaurantOrderTracking.Domain.Interface;
 using RestaurantOrderTracking.Domain.Interface.Repository;
+using ChefEntity = RestaurantOrderTracking.Domain.Entities.Chef;
 
 namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateStatus
 {
@@ -12,6 +13,7 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
     {
         private readonly IOrderItemRepository _orderItemRepository;
         private readonly IOrderItemLogRepository _orderItemLogRepository;
+        private readonly IChefRepository _chefRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         private readonly INotificationService _notificationService;
@@ -19,11 +21,13 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
         public UpdateStatusOrderItemHandler(
             IOrderItemRepository orderItemRepository,
             IOrderItemLogRepository orderItemLogRepository,
+            IChefRepository chefRepository,
             IUnitOfWork unitOfWork,
             INotificationService notificationService)
         {
             _orderItemRepository = orderItemRepository;
             _orderItemLogRepository = orderItemLogRepository;
+            _chefRepository = chefRepository;
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
         }
@@ -35,6 +39,9 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
 
             var orderTransitions = new Dictionary<Guid, OrderItemStatus>();
             var successCount = 0;
+            bool hasCookingToReadyTransition = false;
+            bool hasConfirmedToCookingTransition = false;
+            ChefEntity? assigneeChef = null;
 
             foreach (var orderItemId in request.OrderItemIds)
             {
@@ -61,7 +68,22 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                     if (!request.AssigneeId.HasValue)
                         return Result.Failure("AssigneeId (chef) is required when transitioning from Confirmed to Cooking.");
 
+                    if (assigneeChef is null)
+                    {
+                        assigneeChef = await _chefRepository.GetByAccountIdAsync(request.AssigneeId.Value);
+                        if (assigneeChef is null)
+                            return Result.Failure($"Chef with account id '{request.AssigneeId.Value}' was not found.");
+
+                        if (!assigneeChef.IsAvailable)
+                            return Result.Failure($"Chef with account id '{request.AssigneeId.Value}' is not available.");
+                    }
+
                     orderItem.AssignChef(request.AssigneeId.Value);
+                    hasConfirmedToCookingTransition = true;
+                }
+                else if (previousStatus == OrderItemStatus.Cooking && request.NewStatus == OrderItemStatus.Ready)
+                {
+                    hasCookingToReadyTransition = true;
                 }
                 else if (previousStatus == OrderItemStatus.Ready && request.NewStatus == OrderItemStatus.Delivering)
                 {
@@ -75,7 +97,8 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                     previousStatus: previousStatus,
                     newStatus: request.NewStatus,
                     changeSource: request.ChangeSource,
-                    accountId: request.AccountId
+                    accountId: request.AccountId,
+                    notes: request.Note
                 );
 
                 await _orderItemLogRepository.AddAsync(log);
@@ -85,10 +108,33 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                 successCount++;
             }
 
-            // 5. Save both changes in a single transaction
+            if (hasConfirmedToCookingTransition && assigneeChef != null && assigneeChef.IsAvailable)
+            {
+                assigneeChef.UpdateAvailability(false);
+            }
+
+            // 5. Check chef availability if any order item transitioned from Cooking to Ready
+            if (hasCookingToReadyTransition && request.AccountId.HasValue)
+            {
+                var remainingCookingItems = await _orderItemRepository.FindAsync(x =>
+                    x.ChefAccountId == request.AccountId.Value &&
+                    x.Status == OrderItemStatus.Cooking &&
+                    !request.OrderItemIds.Contains(x.Id));
+
+                if (!remainingCookingItems.Any())
+                {
+                    var chef = await _chefRepository.GetByAccountIdAsync(request.AccountId.Value);
+                    if (chef != null && !chef.IsAvailable)
+                    {
+                        chef.UpdateAvailability(true);
+                    }
+                }
+            }
+
+            // 6. Save both changes in a single transaction
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // 6. Send real-time notification about the status change for each unique order
+            // 7. Send real-time notification about the status change for each unique order
             foreach (var kvp in orderTransitions)
             {
                 await _notificationService.NotifyOrderStatusChanged(

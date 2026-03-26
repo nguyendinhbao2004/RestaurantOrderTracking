@@ -24,9 +24,6 @@ namespace Application.Feature.Auth.Command.Register.RegisterChef
             RuleFor(x => x.SkillLevel)
                 .NotEmpty().WithMessage("Skill level is required.")
                 .MaximumLength(50).WithMessage("Skill level must not exceed 50 characters.");
-            RuleFor(x => x.Station)
-                .NotEmpty().WithMessage("Station is required.")
-                .MaximumLength(50).WithMessage("Station must not exceed 50 characters.");
         }
     }
 }
