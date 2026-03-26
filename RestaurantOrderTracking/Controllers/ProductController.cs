@@ -2,6 +2,7 @@ using Application.Feature.Product.Commands.Create;
 using Application.Feature.Product.Queries.GetAllProduct;
 using Application.Feature.Products.Commands.Update.UpdateInfo;
 using Application.Feature.Products.Commands.Update.UpdateStatus;
+using Application.Feature.Products.Queries.GetProductByName;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,6 +40,21 @@ namespace RestaurantOrderTracking.Controllers
         {
             var query = new GetAllProductQueries(keyword, pageIndex, pageSize);
             var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get product by name.
+        /// </summary>
+        /// <param name="name">Product name</param>
+        /// <returns>ProductResponse</returns>
+        [HttpGet("by-name")]
+        public async Task<IActionResult> GetProductByName([FromQuery] string name)
+        {
+            var query = new GetProductByNameQuery(name);
+            var result = await _mediator.Send(query);
+            if (result == null)
+                return NotFound();
             return Ok(result);
         }
 

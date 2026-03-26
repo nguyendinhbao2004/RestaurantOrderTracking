@@ -27,5 +27,11 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
             return (items, totalCount);
         }
+
+        public async Task<Product?> GetByNameAsync(string name)
+        {
+            return await _dbSet.Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Name.ToLower() == name.ToLower());
+        }
     }
 }
