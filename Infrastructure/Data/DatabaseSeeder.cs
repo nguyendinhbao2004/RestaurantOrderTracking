@@ -83,13 +83,10 @@ namespace RestaurantOrderTracking.Infrastructure.Data
 
             var categories = new List<Category>
             {
-                new Category(1, "Món khai vị", "Các món ăn nhẹ để bắt đầu bữa ăn"),
-                new Category(2, "Món chính", "Các món ăn chính đậm đà và no bụng"),
-                new Category(3, "Tráng miệng", "Món ngọt kết thúc bữa ăn tuyệt vời"),
-                new Category(4, "Đồ uống", "Các loại nước giải khát tươi mát"),
-                new Category(5, "Súp & Canh", "Các món súp ấm nóng và bổ dưỡng"),
-                new Category(6, "Salad", "Rau trộn tươi ngon và lành mạnh"),
-                new Category(7, "Món đặc biệt", "Những gợi ý đặc biệt từ đầu bếp trưởng")
+                new Category("Món Á", "Các món ăn Châu Á"),
+                new Category("Món Âu", "Các món ăn Châu Á"),
+                new Category("Đồ uống Pha Chế", "Món nước pha chế"),
+                new Category("Nước Ngọt", "Nước ngọt"),
             };
             await _context.Categories.AddRangeAsync(categories);
             await _context.SaveChangesAsync();
@@ -171,49 +168,55 @@ namespace RestaurantOrderTracking.Infrastructure.Data
                 return;
             }
 
-            var products = new List<Product>
+            // Lấy danh sách category từ database để lấy đúng Id
+            var categories = await _context.Categories.ToListAsync();
+            var categoryMonA = categories.FirstOrDefault(c => c.Name == "Món Á");
+            var categoryMonAu = categories.FirstOrDefault(c => c.Name == "Món Âu");
+            var categoryDoUongPhaChe = categories.FirstOrDefault(c => c.Name == "Đồ uống Pha Chế");
+            var categoryNuocNgot = categories.FirstOrDefault(c => c.Name == "Nước Ngọt");
+
+            var products = new List<Product>();
+
+            if (categoryMonA != null)
             {
-                // Món khai vị (CategoryId: 1)
-                new Product(1, "Chả giò rế", 45000m, true, "Chả giò rau củ chiên giòn rụm"),
-                new Product(1, "Hoành thánh chiên", 38000m, true, "Hoành thánh vàng giòn kèm nước chấm đặc biệt"),
-                new Product(1, "Bánh mì bơ tỏi", 25000m, true, "Bánh mì nướng bơ tỏi thơm lừng"),
-                new Product(1, "Cánh gà Buffalo", 65000m, true, "Cánh gà sốt cay kiểu Buffalo"),
-
-                // Món chính (CategoryId: 2)
-                new Product(2, "Cá hồi nướng", 185000m, true, "Cá hồi Đại Tây Dương nướng thảo mộc"),
-                new Product(2, "Bít tết bò", 220000m, true, "Bò thượng hạng chế biến theo yêu cầu"),
-                new Product(2, "Gà sốt Parmesan", 145000m, true, "Ức gà chiên xù kèm sốt cà chua và phô mai"),
-                new Product(2, "Cơm chiên rau củ", 55000m, true, "Cơm chiên tơi xốp cùng rau củ tươi"),
-                new Product(2, "Pad Thai", 75000m, true, "Hủ tiếu xào kiểu Thái đặc trưng"),
-                new Product(2, "Phở bò truyền thống", 65000m, true, "Phở bò với nước dùng đậm đà"),
-
-                // Tráng miệng (CategoryId: 3)
-                new Product(3, "Bánh kem Chocolate", 55000m, true, "Bánh chocolate tầng đậm đà"),
-                new Product(3, "Kem Sundae", 45000m, true, "Kem vani kèm các loại topping"),
-                new Product(3, "Bánh Tiramisu", 65000m, true, "Bánh hương vị cà phê kiểu Ý"),
-                new Product(3, "Đĩa trái cây tươi", 75000m, true, "Trái cây tươi tổng hợp theo mùa"),
-
-                // Đồ uống (CategoryId: 4)
-                new Product(4, "Nước cam ép", 35000m, true, "Nước cam tươi nguyên chất vắt trong ngày"),
-                new Product(4, "Cà phê sữa đá", 28000m, true, "Cà phê sữa đá truyền thống Việt Nam"),
-                new Product(4, "Trà xanh", 20000m, true, "Trà xanh nóng hoặc đá"),
-                new Product(4, "Coca Cola", 18000m, true, "Nước giải khát có gas ướp lạnh"),
-                new Product(4, "Sinh tố hỗn hợp", 45000m, true, "Sinh tố trái cây tươi xay nhuyễn"),
-
-                // Súp & Canh (CategoryId: 5)
-                new Product(5, "Súp Tom Yum", 55000m, true, "Súp tôm cay nồng kiểu Thái"),
-                new Product(5, "Súp nấm kem", 45000m, true, "Súp nấm kem béo ngậy"),
-                new Product(5, "Súp gà ngô non", 40000m, true, "Súp gà truyền thống nấu với ngô non"),
-
-                // Salad (CategoryId: 6)
-                new Product(6, "Salad Caesar", 65000m, true, "Xà lách Romaine kèm sốt Caesar đặc trưng"),
-                new Product(6, "Salad Hy Lạp", 55000m, true, "Salad Địa Trung Hải với phô mai Feta"),
-                new Product(6, "Salad vườn", 45000m, true, "Các loại rau xanh hỗn hợp tươi mới"),
-
-                // Món đặc biệt (CategoryId: 7)
-                new Product(7, "Món đặc sản trong ngày", 195000m, true, "Món ăn đặc biệt do đầu bếp lựa chọn"),
-                new Product(7, "Khay hải sản cao cấp", 350000m, true, "Hải sản tươi sống tổng hợp chọn lọc")
-                };
+                products.AddRange(new[]
+                {
+                    new Product(categoryMonA.Id, "Phở bò", 65000m, true, "Phở bò truyền thống Việt Nam"),
+                    new Product(categoryMonA.Id, "Cơm chiên Dương Châu", 55000m, true, "Cơm chiên kiểu Dương Châu"),
+                    new Product(categoryMonA.Id, "Gỏi cuốn tôm thịt", 40000m, true, "Gỏi cuốn tươi ngon"),
+                    new Product(categoryMonA.Id, "Bún chả Hà Nội", 70000m, true, "Bún chả đặc sản Hà Nội")
+                });
+            }
+            if (categoryMonAu != null)
+            {
+                products.AddRange(new[]
+                {
+                    new Product(categoryMonAu.Id, "Bít tết bò", 220000m, true, "Bò thượng hạng chế biến theo yêu cầu"),
+                    new Product(categoryMonAu.Id, "Cá hồi nướng", 185000m, true, "Cá hồi Đại Tây Dương nướng thảo mộc"),
+                    new Product(categoryMonAu.Id, "Mỳ Ý sốt bò bằm", 95000m, true, "Mỳ Ý truyền thống với sốt bò bằm"),
+                    new Product(categoryMonAu.Id, "Salad Caesar", 65000m, true, "Xà lách Romaine kèm sốt Caesar đặc trưng")
+                });
+            }
+            if (categoryDoUongPhaChe != null)
+            {
+                products.AddRange(new[]
+                {
+                    new Product(categoryDoUongPhaChe.Id, "Trà đào cam sả", 35000m, true, "Trà đào cam sả mát lạnh"),
+                    new Product(categoryDoUongPhaChe.Id, "Sinh tố bơ", 40000m, true, "Sinh tố bơ tươi"),
+                    new Product(categoryDoUongPhaChe.Id, "Nước ép dưa hấu", 30000m, true, "Nước ép dưa hấu nguyên chất"),
+                    new Product(categoryDoUongPhaChe.Id, "Cà phê sữa đá", 28000m, true, "Cà phê sữa đá truyền thống Việt Nam")
+                });
+            }
+            if (categoryNuocNgot != null)
+            {
+                products.AddRange(new[]
+                {
+                    new Product(categoryNuocNgot.Id, "Coca Cola", 18000m, true, "Nước giải khát có gas ướp lạnh"),
+                    new Product(categoryNuocNgot.Id, "Pepsi", 18000m, true, "Nước giải khát có gas Pepsi"),
+                    new Product(categoryNuocNgot.Id, "7Up", 18000m, true, "Nước giải khát có gas 7Up"),
+                    new Product(categoryNuocNgot.Id, "Nước suối", 12000m, true, "Nước suối đóng chai")
+                });
+            }
 
             await _context.Products.AddRangeAsync(products);
             await _context.SaveChangesAsync();

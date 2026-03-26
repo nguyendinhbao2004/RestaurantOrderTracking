@@ -7,5 +7,5 @@ using System.Text;
 
 namespace RestaurantOrderTracking.Application.Feature.Order.Commands.Create
 {
-    public record CreateOrderCommand(Guid? TableId, Guid AccountId, OrderType OrderType) : IRequest<Result<Guid>>;
+    public record CreateOrderCommand(Guid?  TableId, Guid AccountId, OrderType OrderType) : IRequest<Result<Guid>>;
 }
