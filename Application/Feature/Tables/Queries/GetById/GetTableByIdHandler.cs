@@ -27,56 +27,53 @@ namespace Application.Feature.Tables.Queries.GetById
                 return Result<TableDetailResponse>.Failure($"Table with ID {request.Id} not found.");
             }
 
-            // Only get the order with status Confirmed
-            var confirmedOrder = table.Orders
-                .Where(order => order.Status == OrderStatus.Confirmed)
+            var activeOrders = table.Orders
+                .Where(order => order.Status != OrderStatus.Completed && order.Status != OrderStatus.Cancelled)
                 .OrderByDescending(order => order.CreatedAt)
-                .FirstOrDefault();
+                .ToList();
 
             var tableDetailResponse = _mapper.Map<TableDetailResponse>(table);
-            tableDetailResponse.Orders = MapActiveOrder(confirmedOrder);
+            tableDetailResponse.Orders = MapActiveOrders(activeOrders);
 
             return Result<TableDetailResponse>.Success("Get Table Detail Successfully", tableDetailResponse);
         }
 
-        private static ActiveOrderDto? MapActiveOrder(Order? activeOrder)
+        private static List<ActiveOrderDto> MapActiveOrders(IEnumerable<Order> activeOrders)
         {
-            if (activeOrder == null)
+            return activeOrders.Select(activeOrder =>
             {
-                return null;
-            }
+                var nonCancelledItems = activeOrder.OrderItems
+                    .Where(orderItem => orderItem.Status != OrderItemStatus.Cancelled && orderItem.Product != null)
+                    .ToList();
 
-            var nonCancelledItems = activeOrder.OrderItems
-                .Where(orderItem => orderItem.Status != OrderItemStatus.Cancelled && orderItem.Product != null)
-                .ToList();
-
-            var groupedOrderItems = nonCancelledItems
-                .GroupBy(orderItem => new { orderItem.ProductId, orderItem.Status, orderItem.Note })
-                .Select(group =>
-                {
-                    var firstItem = group.First();
-
-                    return new OrderItemDto
+                var groupedOrderItems = nonCancelledItems
+                    .GroupBy(orderItem => new { orderItem.ProductId, orderItem.Status, orderItem.Note })
+                    .Select(group =>
                     {
-                        Id = firstItem.Id,
-                        ProductId = group.Key.ProductId,
-                        ProductName = firstItem.Product.Name,
-                        Price = firstItem.Product.Price,
-                        Quantity = group.Count(),
-                        Note = group.Key.Note,
-                        Status = group.Key.Status.ToString()
-                    };
-                })
-                .ToList();
+                        var firstItem = group.First();
 
-            return new ActiveOrderDto
-            {
-                Id = activeOrder.Id,
-                OrderType = activeOrder.OrderTypes.ToString(),
-                Status = activeOrder.Status.ToString(),
-                TotalAmount = nonCancelledItems.Sum(orderItem => orderItem.Product.Price),
-                OrderItems = groupedOrderItems
-            };
+                        return new OrderItemDto
+                        {
+                            Id = firstItem.Id,
+                            ProductId = group.Key.ProductId,
+                            ProductName = firstItem.Product.Name,
+                            Price = firstItem.Product.Price,
+                            Quantity = group.Count(),
+                            Note = group.Key.Note,
+                            Status = group.Key.Status.ToString()
+                        };
+                    })
+                    .ToList();
+
+                return new ActiveOrderDto
+                {
+                    Id = activeOrder.Id,
+                    OrderType = activeOrder.OrderTypes.ToString(),
+                    Status = activeOrder.Status.ToString(),
+                    TotalAmount = nonCancelledItems.Sum(orderItem => orderItem.Product.Price),
+                    OrderItems = groupedOrderItems
+                };
+            }).ToList();
         }
     }
 }

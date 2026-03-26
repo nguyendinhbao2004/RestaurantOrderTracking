@@ -12,7 +12,7 @@ namespace Application.Dto.Table
         public int Capacity { get; set; }
 
         [JsonPropertyName("Orders")]
-        public ActiveOrderDto? Orders { get; set; }
+        public List<ActiveOrderDto> Orders { get; set; } = new();
 
     }
 }
