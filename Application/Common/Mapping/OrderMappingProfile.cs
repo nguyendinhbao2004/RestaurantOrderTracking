@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using RestaurantOrderTracking.Application.Dto.Order;
 using RestaurantOrderTracking.Domain.Entities;
 using System;
@@ -13,7 +13,8 @@ namespace RestaurantOrderTracking.Application.Common.Mapping
             CreateMap<Order,OrderResponse>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.TableNumber, opt => opt.MapFrom(src => src.Table.TableNumber))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.OrderType, opt => opt.MapFrom(src => src.OrderTypes.ToString()));
         }
     }
 }

@@ -37,6 +37,8 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Queries.GetOrderById
                 WaiterName = order.Waiter?.FullName,
                 CustomerId = order.CustomerId,
                 CustomerName = order.Customer?.Name,
+                CustomerPhone = order.Customer?.Phone,
+                CustomerAddress = order.Customer?.Address,
                 CreatedAt = order.CreatedAt,
                 UpdatedAt = order.UpdatedAt,
                 OrderItems = order.OrderItems.Select(item => new OrderItemDetailResponse
