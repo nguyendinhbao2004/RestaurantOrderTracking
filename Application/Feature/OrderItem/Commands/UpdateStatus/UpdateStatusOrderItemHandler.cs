@@ -65,13 +65,14 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                         return Result.Failure("AssigneeId (chef) is required when transitioning from Confirmed to Cooking.");
 
                     var chef = await _chefRepository.GetByAccountIdAsync(request.AssigneeId.Value);
-                    if (chef == null)
-                        return Result.Failure("The person assigned to the task is not a chef!");
+                    if (chef is null)
+                        return Result.Failure($"Chef with account id '{request.AssigneeId.Value}' was not found.");
 
-                    chef.UpdateAvailability(false);
-                    _chefRepository.Update(chef);
+                    if (!chef.IsAvailable)
+                        return Result.Failure($"Chef with account id '{request.AssigneeId.Value}' is not available.");
 
                     orderItem.AssignChef(request.AssigneeId.Value);
+                    chef.UpdateAvailability(false);
                 }
                 else if (previousStatus == OrderItemStatus.Ready && request.NewStatus == OrderItemStatus.Delivering)
                 {

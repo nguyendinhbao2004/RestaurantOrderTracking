@@ -25,7 +25,6 @@ namespace RestaurantOrderTracking.Application.Feature.Category.Commands.Create
                 return Result<int>.Failure("Category name already exists.");
 
             var category = new CategoryEntity(
-                id: request.Id,
                 name: request.Name,
                 description: request.Description,
                 imageUrl: request.ImageUrl

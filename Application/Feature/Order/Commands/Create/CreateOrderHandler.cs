@@ -33,7 +33,7 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Commands.Create
             if (request.TableId == null)
                 return Result<Guid>.Failure("TableId is required for DineIn or TakeAway order.");
 
-            var table = await _tableRepository.GetByIdAsync(request.TableId.Value);
+            var table = await _tableRepository.GetByIdAsync(request.TableId);
             if (table == null)
                 return Result<Guid>.Failure($"Table with ID {request.TableId.Value} not found.");
 
@@ -51,7 +51,7 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Commands.Create
 
             await _orderRepository.AddAsync(order);
 
-            table.SetOccupied();
+            table.SetReserved();
             _tableRepository.Update(table, cancellationToken);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);

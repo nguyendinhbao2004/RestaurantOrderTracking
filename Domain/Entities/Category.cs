@@ -15,9 +15,9 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         protected Category() { }
 
-        public Category(int id, string name, string? description = null, string? imageUrl = null, bool isActive = true)
+        public Category(string name, string? description = null, string? imageUrl = null, bool isActive = true)
         {
-            Id = id;
+            Id = new int();
             Name = name;
             Description = description;
             ImageUrl = imageUrl;
