@@ -80,7 +80,7 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
 
             if (roleId == 6)
             {
-                query = query.Where(oi => oi.Status == RestaurantOrderTracking.Domain.Enums.OrderItemStatus.Confirmed || oi.Status == RestaurantOrderTracking.Domain.Enums.OrderItemStatus.Cooking);
+                query = query.Where(oi => oi.Status == RestaurantOrderTracking.Domain.Enums.OrderItemStatus.Pending || oi.Status == RestaurantOrderTracking.Domain.Enums.OrderItemStatus.Confirmed || oi.Status == RestaurantOrderTracking.Domain.Enums.OrderItemStatus.Cooking);
             }
             else if (roleId == 3)
             {

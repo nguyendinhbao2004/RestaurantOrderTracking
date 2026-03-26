@@ -25,14 +25,21 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.Create
             if (request.Items == null || request.Items.Count == 0)
                 return Result.Failure("Items list cannot be empty.");
 
+            var categoryIdCache = new Dictionary<Guid, int>();
+
             foreach (var item in request.Items)
             {
                 if (item.Quantity <= 0)
                     return Result.Failure($"Quantity for product '{item.ProductId}' must be greater than 0.");
 
-                var product = await _productRepository.GetByIdAsync(item.ProductId, cancellationToken);
-                if (product is null)
-                    return Result.Failure($"Product with ID '{item.ProductId}' was not found.");
+                if (!categoryIdCache.ContainsKey(item.ProductId))
+                {
+                    var product = await _productRepository.GetByIdAsync(item.ProductId, cancellationToken);
+                    if (product is null)
+                        return Result.Failure($"Product with ID '{item.ProductId}' was not found.");
+                    
+                    categoryIdCache[item.ProductId] = product.CategoryId;
+                }
             }
 
             // Load the order (include its items so the domain entity is fully populated)
@@ -47,13 +54,15 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.Create
             {
                 foreach (var item in request.Items)
                 {
+                    int categoryId = categoryIdCache[item.ProductId];
                     for (int i = 0; i < item.Quantity; i++)
                     {
                         order.AddItem(
                             productId: item.ProductId,
                             accountId: request.CreatedBy,
                             note: item.Note ?? string.Empty,
-                            orderChannel: request.OrderChannel
+                            orderChannel: request.OrderChannel,
+                            categoryId: categoryId
                         );
                         totalCreatedItems++;
                     }

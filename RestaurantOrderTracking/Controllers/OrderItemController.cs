@@ -154,7 +154,7 @@ namespace RestaurantOrderTracking.WebApi.Controllers
 
         /// <summary>
         /// Retrieves a list of order items based on the logged-in account.
-        /// Role 6 gets items with Status Confirmed (1) or Cooking (2).
+        /// Role 6 gets items with Status Pending (0), Confirmed (1) or Cooking (2).
         /// Role 3 gets items with Status Cooking (2) assigned to them.
         /// </summary>
         /// <returns>A list of order items matching the account role conditions.</returns>
