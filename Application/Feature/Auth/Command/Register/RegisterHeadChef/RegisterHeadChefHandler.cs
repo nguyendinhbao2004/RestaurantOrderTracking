@@ -30,7 +30,7 @@ namespace Application.Feature.Auth.Command.Register.RegisterHeadChef
 
             var hashedPassword = _accountRepository.HashPassword(request.Password);
             var account = new RestaurantOrderTracking.Domain.Entities.Account(
-                roleId: 7,
+                roleId: 6, // Assuming 6 is the RoleId for HeadChef
                 userName: request.UserName,
                 fullName: request.FullName,
                 phone: request.Phone,
