@@ -5,6 +5,7 @@ using RestaurantOrderTracking.Domain.Entities;
 using RestaurantOrderTracking.Domain.Enums;
 using RestaurantOrderTracking.Domain.Interface;
 using RestaurantOrderTracking.Domain.Interface.Repository;
+using ChefEntity = RestaurantOrderTracking.Domain.Entities.Chef;
 
 namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateStatus
 {
@@ -39,6 +40,8 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
             var orderTransitions = new Dictionary<Guid, OrderItemStatus>();
             var successCount = 0;
             bool hasCookingToReadyTransition = false;
+            bool hasConfirmedToCookingTransition = false;
+            ChefEntity? assigneeChef = null;
 
             foreach (var orderItemId in request.OrderItemIds)
             {
@@ -65,15 +68,18 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                     if (!request.AssigneeId.HasValue)
                         return Result.Failure("AssigneeId (chef) is required when transitioning from Confirmed to Cooking.");
 
-                    var chef = await _chefRepository.GetByAccountIdAsync(request.AssigneeId.Value);
-                    if (chef is null)
-                        return Result.Failure($"Chef with account id '{request.AssigneeId.Value}' was not found.");
+                    if (assigneeChef is null)
+                    {
+                        assigneeChef = await _chefRepository.GetByAccountIdAsync(request.AssigneeId.Value);
+                        if (assigneeChef is null)
+                            return Result.Failure($"Chef with account id '{request.AssigneeId.Value}' was not found.");
 
-                    if (!chef.IsAvailable)
-                        return Result.Failure($"Chef with account id '{request.AssigneeId.Value}' is not available.");
+                        if (!assigneeChef.IsAvailable)
+                            return Result.Failure($"Chef with account id '{request.AssigneeId.Value}' is not available.");
+                    }
 
                     orderItem.AssignChef(request.AssigneeId.Value);
-                    chef.UpdateAvailability(false);
+                    hasConfirmedToCookingTransition = true;
                 }
                 else if (previousStatus == OrderItemStatus.Cooking && request.NewStatus == OrderItemStatus.Ready)
                 {
@@ -99,6 +105,11 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                 // Track the first known transition for an order's notification
                 orderTransitions.TryAdd(orderItem.OrderId, previousStatus);
                 successCount++;
+            }
+
+            if (hasConfirmedToCookingTransition && assigneeChef != null && assigneeChef.IsAvailable)
+            {
+                assigneeChef.UpdateAvailability(false);
             }
 
             // 5. Check chef availability if any order item transitioned from Cooking to Ready
