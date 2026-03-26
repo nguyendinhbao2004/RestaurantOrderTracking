@@ -38,6 +38,7 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
 
             var orderTransitions = new Dictionary<Guid, OrderItemStatus>();
             var successCount = 0;
+            bool hasCookingToReadyTransition = false;
 
             foreach (var orderItemId in request.OrderItemIds)
             {
@@ -74,6 +75,10 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                     orderItem.AssignChef(request.AssigneeId.Value);
                     chef.UpdateAvailability(false);
                 }
+                else if (previousStatus == OrderItemStatus.Cooking && request.NewStatus == OrderItemStatus.Ready)
+                {
+                    hasCookingToReadyTransition = true;
+                }
                 else if (previousStatus == OrderItemStatus.Ready && request.NewStatus == OrderItemStatus.Delivering)
                 {
                     if (request.AccountId.HasValue)
@@ -96,10 +101,28 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                 successCount++;
             }
 
-            // 5. Save both changes in a single transaction
+            // 5. Check chef availability if any order item transitioned from Cooking to Ready
+            if (hasCookingToReadyTransition && request.AccountId.HasValue)
+            {
+                var remainingCookingItems = await _orderItemRepository.FindAsync(x =>
+                    x.ChefAccountId == request.AccountId.Value &&
+                    x.Status == OrderItemStatus.Cooking &&
+                    !request.OrderItemIds.Contains(x.Id));
+
+                if (!remainingCookingItems.Any())
+                {
+                    var chef = await _chefRepository.GetByAccountIdAsync(request.AccountId.Value);
+                    if (chef != null && !chef.IsAvailable)
+                    {
+                        chef.UpdateAvailability(true);
+                    }
+                }
+            }
+
+            // 6. Save both changes in a single transaction
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // 6. Send real-time notification about the status change for each unique order
+            // 7. Send real-time notification about the status change for each unique order
             foreach (var kvp in orderTransitions)
             {
                 await _notificationService.NotifyOrderStatusChanged(
