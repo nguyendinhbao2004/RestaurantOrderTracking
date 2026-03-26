@@ -13,5 +13,10 @@ namespace RestaurantOrderTracking.Application.Dto.OrderItem
         public DateTime OrderAt { get; set; }
         public string? CreatedBy { get; set; }
         public string? CreatedByName { get; set; }
+        public Guid? TableId { get; set; }
+        public string? TableNumber { get; set; }
+        public Guid? AreaId { get; set; }
+        public string? AreaName { get; set; }
+        public string? OrderType { get; set; }
     }
 }

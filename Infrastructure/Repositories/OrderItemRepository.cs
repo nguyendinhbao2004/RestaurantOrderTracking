@@ -76,6 +76,9 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
         {
             var query = _dbSet
                 .Include(oi => oi.Product)
+                .Include(oi => oi.Order)
+                    .ThenInclude(o => o.Table)
+                        .ThenInclude(t => t.Area)
                 .AsQueryable();
 
             if (roleId == 6)
