@@ -5,6 +5,7 @@ using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateInfo;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateStatus;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetAllOrderItem;
 using RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetOrderItemsByStatus;
+using RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetOrderItemsByAccount;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -147,6 +148,33 @@ namespace RestaurantOrderTracking.WebApi.Controllers
             var query = new GetOrderItemsByStatusQuery(status);
             var result = await _mediator.Send(query);
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Retrieves a list of order items based on the logged-in account.
+        /// Role 6 gets items with Status Confirmed (1) or Cooking (2).
+        /// Role 3 gets items with Status Cooking (2) assigned to them.
+        /// </summary>
+        /// <returns>A list of order items matching the account role conditions.</returns>
+        [HttpGet("by-account")]
+        public async Task<IActionResult> GetOrderItemsByAccount()
+        {
+            var accountIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                                 ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                                 ?? User.FindFirstValue("sub");
+
+            if (!Guid.TryParse(accountIdClaim, out var accountId))
+            {
+                return Unauthorized("User is not logged in or token is invalid.");
+            }
+
+            var query = new GetOrderItemsByAccountQuery(accountId);
+            var result = await _mediator.Send(query);
+
+            if (result.Succeeded)
+                return Ok(result);
+
+            return BadRequest(result.Errors);
         }
     }
 }

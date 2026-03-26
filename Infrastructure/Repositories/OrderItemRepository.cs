@@ -48,5 +48,29 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
                 .OrderByDescending(oi => oi.CreatedAt)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<OrderItem>> GetOrderItemsForAccountAsync(int roleId, Guid accountId)
+        {
+            var query = _dbSet
+                .Include(oi => oi.Product)
+                .AsQueryable();
+
+            if (roleId == 6)
+            {
+                query = query.Where(oi => oi.Status == RestaurantOrderTracking.Domain.Enums.OrderItemStatus.Confirmed || oi.Status == RestaurantOrderTracking.Domain.Enums.OrderItemStatus.Cooking);
+            }
+            else if (roleId == 3)
+            {
+                query = query.Where(oi => oi.Status == RestaurantOrderTracking.Domain.Enums.OrderItemStatus.Cooking && oi.ChefAccountId == accountId);
+            }
+            else
+            {
+                return new List<OrderItem>();
+            }
+
+            return await query
+                .OrderByDescending(oi => oi.CreatedAt)
+                .ToListAsync();
+        }
     }
 }
