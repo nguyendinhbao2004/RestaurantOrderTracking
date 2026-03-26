@@ -12,6 +12,7 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
     {
         private readonly IOrderItemRepository _orderItemRepository;
         private readonly IOrderItemLogRepository _orderItemLogRepository;
+        private readonly IChefRepository _chefRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         private readonly INotificationService _notificationService;
@@ -19,11 +20,13 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
         public UpdateStatusOrderItemHandler(
             IOrderItemRepository orderItemRepository,
             IOrderItemLogRepository orderItemLogRepository,
+            IChefRepository chefRepository,
             IUnitOfWork unitOfWork,
             INotificationService notificationService)
         {
             _orderItemRepository = orderItemRepository;
             _orderItemLogRepository = orderItemLogRepository;
+            _chefRepository = chefRepository;
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
         }
@@ -61,7 +64,15 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                     if (!request.AssigneeId.HasValue)
                         return Result.Failure("AssigneeId (chef) is required when transitioning from Confirmed to Cooking.");
 
+                    var chef = await _chefRepository.GetByAccountIdAsync(request.AssigneeId.Value);
+                    if (chef is null)
+                        return Result.Failure($"Chef with account id '{request.AssigneeId.Value}' was not found.");
+
+                    if (!chef.IsAvailable)
+                        return Result.Failure($"Chef with account id '{request.AssigneeId.Value}' is not available.");
+
                     orderItem.AssignChef(request.AssigneeId.Value);
+                    chef.UpdateAvailability(false);
                 }
                 else if (previousStatus == OrderItemStatus.Ready && request.NewStatus == OrderItemStatus.Delivering)
                 {
