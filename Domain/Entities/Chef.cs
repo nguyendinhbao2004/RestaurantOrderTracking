@@ -32,5 +32,10 @@ namespace RestaurantOrderTracking.Domain.Entities
             SkillLevel = skillLevel;
             IsAvailable = isAvailable;
         }
+
+        public void UpdateAvailability(bool isAvailable)
+        {
+            IsAvailable = isAvailable;
+        }
     }
 }
