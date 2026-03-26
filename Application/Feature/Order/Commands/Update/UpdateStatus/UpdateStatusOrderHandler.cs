@@ -65,8 +65,8 @@ namespace RestaurantOrderTracking.Application.Feature.Order.Commands.Update.Upda
                 order.Id,
                 previousStatus.ToString(),
                 order.Status.ToString(),
-                ResolveTargetRoles(order.Status),
-                cancellationToken);
+                targetRoles: ResolveTargetRoles(order.Status),
+                cancellationToken: cancellationToken);
 
             return Result<Guid>.Success("Update Order Status Successfully", order.Id);
         }

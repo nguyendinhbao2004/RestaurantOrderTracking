@@ -41,9 +41,10 @@ namespace RestaurantOrderTracking.Infrastructure.Services.Notification
             string previousStatus,
             string newStatus,
             IEnumerable<string>? targetRoles = null,
+            IEnumerable<Guid>? targetAccountIds = null,
             CancellationToken cancellationToken = default)
         {
-            await GetClients(targetRoles).SendAsync("NotifyOrderStatusChanged", new
+            await GetClients(targetRoles, targetAccountIds).SendAsync("NotifyOrderStatusChanged", new
             {
                 OrderId = orderId,
                 PreviousStatus = previousStatus,

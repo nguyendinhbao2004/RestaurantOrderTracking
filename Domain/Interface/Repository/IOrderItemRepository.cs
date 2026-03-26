@@ -5,6 +5,7 @@ namespace RestaurantOrderTracking.Domain.Interface.Repository
 {
     public interface IOrderItemRepository : IGenericRepository<OrderItem>
     {
+        Task<OrderItem?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default);
         Task<(IEnumerable<OrderItem>, int totalCount)> GetPagedOrderItemsAsync(string? keyword, int pageIndex, int pageSize);
         Task<(IEnumerable<OrderItem>, int totalCount)> GetPagedOrderItemsByStatusAsync(OrderItemStatus status, int pageIndex, int pageSize);
         Task<IEnumerable<OrderItem>> GetOrderItemsByStatusAsync(RestaurantOrderTracking.Domain.Enums.OrderItemStatus status);

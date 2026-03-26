@@ -12,6 +12,16 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
         {
         }
 
+        public async Task<OrderItem?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .Include(oi => oi.Order)
+                    .ThenInclude(o => o.Table)
+                        .ThenInclude(t => t.Area)
+                .Include(oi => oi.Product)
+                .FirstOrDefaultAsync(oi => oi.Id == id, cancellationToken);
+        }
+
         public async Task<(IEnumerable<OrderItem>, int totalCount)> GetPagedOrderItemsAsync(string? keyword, int pageIndex, int pageSize)
         {
             var query = _dbSet

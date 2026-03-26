@@ -19,6 +19,7 @@ namespace RestaurantOrderTracking.Application.Common.Interface
             string previousStatus,
             string newStatus,
             IEnumerable<string>? targetRoles = null,
+            IEnumerable<Guid>? targetAccountIds = null,
             CancellationToken cancellationToken = default);
 
         Task NotifyPaymentSuccess(

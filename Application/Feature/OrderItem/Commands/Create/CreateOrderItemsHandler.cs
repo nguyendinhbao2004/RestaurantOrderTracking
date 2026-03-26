@@ -1,4 +1,5 @@
 using MediatR;
+using RestaurantOrderTracking.Application.Common.Interface;
 using RestaurantOrderTracking.Domain.Common;
 using Domain.Interface.Repository;
 using RestaurantOrderTracking.Domain.Interface;
@@ -10,13 +11,19 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.Create
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IProductRepository _productRepository;
+        private readonly IAccountRepository _accountRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly INotificationService _notificationService;
 
         public CreateOrderItemsHandler(IOrderRepository orderRepository, IProductRepository productRepository,
-            IUnitOfWork unitOfWork) {
+            IAccountRepository accountRepository,
+            IUnitOfWork unitOfWork,
+            INotificationService notificationService) {
             _orderRepository = orderRepository;
             _productRepository = productRepository;
+            _accountRepository = accountRepository;
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
 
         public async Task<Result> Handle(CreateOrderItemsCommand request, CancellationToken cancellationToken)
@@ -74,6 +81,19 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.Create
             }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var headChefAccounts = await _accountRepository.GetAccountsByRoleAsync(6, cancellationToken);
+            var targetHeadChefIds = headChefAccounts
+                .Select(account => account.Id)
+                .Distinct()
+                .ToList();
+
+            await _notificationService.NotifyOrderStatusChanged(
+                orderId: request.OrderId,
+                previousStatus: "N/A",
+                newStatus: "OrderItemCreated",
+                targetAccountIds: targetHeadChefIds,
+                cancellationToken: cancellationToken);
 
             return Result.Success($"{totalCreatedItems} order item(s) created successfully.");
         }

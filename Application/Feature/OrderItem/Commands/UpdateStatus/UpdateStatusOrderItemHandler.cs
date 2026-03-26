@@ -5,6 +5,7 @@ using RestaurantOrderTracking.Domain.Entities;
 using RestaurantOrderTracking.Domain.Enums;
 using RestaurantOrderTracking.Domain.Interface;
 using RestaurantOrderTracking.Domain.Interface.Repository;
+using System.Linq;
 using ChefEntity = RestaurantOrderTracking.Domain.Entities.Chef;
 
 namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateStatus
@@ -14,6 +15,8 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
         private readonly IOrderItemRepository _orderItemRepository;
         private readonly IOrderItemLogRepository _orderItemLogRepository;
         private readonly IChefRepository _chefRepository;
+        private readonly IAccountRepository _accountRepository;
+        private readonly IWaiterRepository _waiterRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         private readonly INotificationService _notificationService;
@@ -22,12 +25,16 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
             IOrderItemRepository orderItemRepository,
             IOrderItemLogRepository orderItemLogRepository,
             IChefRepository chefRepository,
+            IAccountRepository accountRepository,
+            IWaiterRepository waiterRepository,
             IUnitOfWork unitOfWork,
             INotificationService notificationService)
         {
             _orderItemRepository = orderItemRepository;
             _orderItemLogRepository = orderItemLogRepository;
             _chefRepository = chefRepository;
+            _accountRepository = accountRepository;
+            _waiterRepository = waiterRepository;
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
         }
@@ -42,11 +49,13 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
             bool hasCookingToReadyTransition = false;
             bool hasConfirmedToCookingTransition = false;
             ChefEntity? assigneeChef = null;
+            var notifiedChefAccountIds = new HashSet<Guid>();
+            var readyAreaIds = new HashSet<Guid>();
 
             foreach (var orderItemId in request.OrderItemIds)
             {
                 // 1. Load the order item
-                var orderItem = await _orderItemRepository.GetByIdAsync(orderItemId, cancellationToken);
+                var orderItem = await _orderItemRepository.GetByIdWithDetailsAsync(orderItemId, cancellationToken);
                 if (orderItem is null)
                     return Result.Failure($"OrderItem with ID '{orderItemId}' was not found.");
 
@@ -80,10 +89,16 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
 
                     orderItem.AssignChef(request.AssigneeId.Value);
                     hasConfirmedToCookingTransition = true;
+                    notifiedChefAccountIds.Add(request.AssigneeId.Value);
                 }
                 else if (previousStatus == OrderItemStatus.Cooking && request.NewStatus == OrderItemStatus.Ready)
                 {
                     hasCookingToReadyTransition = true;
+                    var areaId = orderItem.Order?.Table?.AreaId;
+                    if (areaId.HasValue)
+                    {
+                        readyAreaIds.Add(areaId.Value);
+                    }
                 }
                 else if (previousStatus == OrderItemStatus.Ready && request.NewStatus == OrderItemStatus.Delivering)
                 {
@@ -143,6 +158,50 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                     newStatus: request.NewStatus.ToString(),
                     targetRoles: ResolveTargetRoles(request.NewStatus),
                     cancellationToken: cancellationToken);
+            }
+
+            if (request.NewStatus == OrderItemStatus.Cooking && notifiedChefAccountIds.Any())
+            {
+                var actor = request.AccountId.HasValue
+                    ? await _accountRepository.GetByIdAsync(request.AccountId.Value, cancellationToken)
+                    : null;
+
+                if (actor?.RoleId == 6)
+                {
+                    foreach (var chefAccountId in notifiedChefAccountIds)
+                    {
+                        await _notificationService.NotifyOrderStatusChanged(
+                            orderId: Guid.Empty,
+                            previousStatus: OrderItemStatus.Confirmed.ToString(),
+                            newStatus: OrderItemStatus.Cooking.ToString(),
+                            targetAccountIds: new[] { chefAccountId },
+                            cancellationToken: cancellationToken);
+                    }
+                }
+            }
+
+            if (request.NewStatus == OrderItemStatus.Ready && readyAreaIds.Any())
+            {
+                foreach (var areaId in readyAreaIds)
+                {
+                    var waitersInArea = await _waiterRepository.GetWaitersByAreaIdAsync(areaId);
+                    var waiterAccountIds = waitersInArea
+                        .Select(waiter => waiter.AccountId)
+                        .Distinct()
+                        .ToList();
+
+                    if (!waiterAccountIds.Any())
+                    {
+                        continue;
+                    }
+
+                    await _notificationService.NotifyOrderStatusChanged(
+                        orderId: Guid.Empty,
+                        previousStatus: OrderItemStatus.Cooking.ToString(),
+                        newStatus: OrderItemStatus.Ready.ToString(),
+                        targetAccountIds: waiterAccountIds,
+                        cancellationToken: cancellationToken);
+                }
             }
 
             return Result.Success($"{successCount} OrderItem(s) updated to {request.NewStatus} successfully.");
