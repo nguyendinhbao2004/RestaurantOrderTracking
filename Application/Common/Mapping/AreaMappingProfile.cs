@@ -9,6 +9,10 @@ namespace RestaurantOrderTracking.Application.Common.Mapping
         public AreaMappingProfile()
         {
             CreateMap<Area, AreaResponse>();
+            
+            CreateMap<Domain.Entities.Waiter, AreaWaiterResponse>()
+                .ForMember(dest => dest.AccountId, opt => opt.MapFrom(src => src.AccountId))
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.Account.FullName));
         }
     }
 }

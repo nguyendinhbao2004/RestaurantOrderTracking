@@ -10,5 +10,6 @@ namespace RestaurantOrderTracking.Domain.Interface.Repository
     {
         Task<Waiter?> GetByAccountIdAsync(Guid accountId);
         Task<Waiter?> GetByConditionAsync(Expression<Func<Waiter, bool>> predicate);
+        Task<List<Waiter>> GetWaitersByAreaIdAsync(Guid areaId);
     }
 }

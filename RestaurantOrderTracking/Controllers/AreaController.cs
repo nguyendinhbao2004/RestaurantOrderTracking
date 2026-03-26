@@ -88,5 +88,19 @@ namespace RestaurantOrderTracking.WebApi.Controllers
 
             return BadRequest(result);
         }
+
+        /// <summary>
+        /// Gets waiters by area ID.
+        /// </summary>
+        /// <param name="id">The ID of the area.</param>
+        /// <returns>List of waiters in the area.</returns>
+        /// <response code="200">Returns list of waiters.</response>
+        [HttpGet("{id}/waiters")]
+        public async Task<IActionResult> GetWaitersByArea([FromRoute] Guid id)
+        {
+            var query = new Application.Feature.Area.Queries.GetWaiters.GetWaitersByAreaQuery(id);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
     }
 }

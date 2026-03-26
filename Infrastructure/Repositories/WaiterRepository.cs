@@ -36,5 +36,14 @@ namespace RestaurantOrderTracking.Infrastructure.Repositories
             var waiter = await query.FirstOrDefaultAsync();
             return waiter;
         }
+
+        public async Task<List<Waiter>> GetWaitersByAreaIdAsync(Guid areaId)
+        {
+            var query = _dbSet.Include(w => w.Account)
+                              .AsQueryable();
+            
+            query = query.Where(w => w.AssignedAreaId == areaId);
+            return await query.ToListAsync();
+        }
     }
 }
