@@ -14,7 +14,8 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
         OrderItemStatus NewStatus,
         Guid? AccountId,
         string ChangeSource,
-        Guid? AssigneeId = null
+        Guid? AssigneeId = null,
+        string? Note = null
     );
 
     /// <summary>
@@ -30,6 +31,7 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
         OrderItemStatus NewStatus,
         Guid? AccountId,
         string ChangeSource,
-        Guid? AssigneeId = null
+        Guid? AssigneeId = null,
+        string? Note = null
     ) : IRequest<Result>;
 }

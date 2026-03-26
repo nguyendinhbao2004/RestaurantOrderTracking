@@ -97,7 +97,8 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Commands.UpdateS
                     previousStatus: previousStatus,
                     newStatus: request.NewStatus,
                     changeSource: request.ChangeSource,
-                    accountId: request.AccountId
+                    accountId: request.AccountId,
+                    notes: request.Note
                 );
 
                 await _orderItemLogRepository.AddAsync(log);

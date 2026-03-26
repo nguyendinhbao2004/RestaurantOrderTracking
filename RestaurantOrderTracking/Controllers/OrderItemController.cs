@@ -96,7 +96,8 @@ namespace RestaurantOrderTracking.WebApi.Controllers
                 NewStatus: request.NewStatus,
                 AccountId: request.AccountId,
                 ChangeSource: request.ChangeSource,
-                AssigneeId: request.AssigneeId
+                AssigneeId: request.AssigneeId,
+                Note: request.Note
             );
 
             var result = await _mediator.Send(command);
