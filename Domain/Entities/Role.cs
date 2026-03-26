@@ -18,9 +18,9 @@ namespace RestaurantOrderTracking.Domain.Entities
 
         protected Role() { }
 
-        public Role(int id, string name, string description)
+        public Role(string name, string description)
         {
-            Id = id;
+            Id = new int(); // Id will be set by the database
             Name = name;
             Description = description;
         }
