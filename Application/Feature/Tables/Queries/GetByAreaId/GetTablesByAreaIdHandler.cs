@@ -27,6 +27,7 @@ namespace Application.Feature.Tables.Queries.GetByAreaId
             }
 
             var tableDetailResponses = _mapper.Map<IEnumerable<TableDetailResponse>>(tables);
+            
             return Result<IEnumerable<TableDetailResponse>>.Success("Get Tables by Area ID Successfully", tableDetailResponses);
         }
     }

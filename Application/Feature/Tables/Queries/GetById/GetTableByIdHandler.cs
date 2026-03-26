@@ -27,17 +27,14 @@ namespace Application.Feature.Tables.Queries.GetById
                 return Result<TableDetailResponse>.Failure($"Table with ID {request.Id} not found.");
             }
 
-            var activeOrder = table.Orders
-                .Where(order => order.Status != OrderStatus.Completed && order.Status != OrderStatus.Cancelled)
+            // Only get the order with status Confirmed
+            var confirmedOrder = table.Orders
+                .Where(order => order.Status == OrderStatus.Confirmed)
                 .OrderByDescending(order => order.CreatedAt)
                 .FirstOrDefault();
 
-            var hasOccupiedOrder = table.Orders.Any(order =>
-                order.Status == OrderStatus.Confirmed ||
-                order.Status == OrderStatus.Preparing ||
-                order.Status == OrderStatus.Paying);
-
             var tableDetailResponse = _mapper.Map<TableDetailResponse>(table);
+            tableDetailResponse.Orders = MapActiveOrder(confirmedOrder);
 
             return Result<TableDetailResponse>.Success("Get Table Detail Successfully", tableDetailResponse);
         }
