@@ -1,129 +1,187 @@
-SignalR Client JS Sample for RestaurantHub (/hubs/restaurant)
-===========================================================
+SignalR Frontend Connection Guide for RestaurantHub
+===================================================
 
-1) Quick browser usage (no build tool)
---------------------------------------
-Copy this into a HTML file and open in browser.
+Hub endpoint:
+- /hubs/restaurant
 
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>RestaurantHub Client</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
-</head>
-<body>
-  <h3>SignalR RestaurantHub Client</h3>
-  <pre id="log"></pre>
-
-  <script>
-    const logEl = document.getElementById("log");
-    const log = (message, payload) => {
-      const time = new Date().toISOString();
-      const line = `[${time}] ${message} ${payload ? JSON.stringify(payload) : ""}`;
-      console.log(line);
-      logEl.textContent += line + "\n";
-    };
-
-    // Replace with your backend URL
-    const API_BASE_URL = "https://localhost:5001";
-
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl(`${API_BASE_URL}/hubs/restaurant`)
-      .withAutomaticReconnect()
-      .build();
-
-    // Event 1: New Order
-    connection.on("NotifyNewOrder", (payload) => {
-      log("NotifyNewOrder", payload);
-      // payload shape:
-      // {
-      //   orderId, orderType, status, createdAt
-      // }
-    });
-
-    // Event 2: Order Status Changed
-    connection.on("NotifyOrderStatusChanged", (payload) => {
-      log("NotifyOrderStatusChanged", payload);
-      // payload shape:
-      // {
-      //   orderId, previousStatus, newStatus, updatedAt
-      // }
-    });
-
-    // Event 3: Payment Success
-    connection.on("NotifyPaymentSuccess", (payload) => {
-      log("NotifyPaymentSuccess", payload);
-      // payload shape:
-      // {
-      //   orderId, amount, paymentMethod, paidAt
-      // }
-    });
-
-    async function start() {
-      try {
-        await connection.start();
-        log("Connected to RestaurantHub");
-      } catch (err) {
-        log("Connection failed, retry in 5s", { error: err?.message });
-        setTimeout(start, 5000);
-      }
-    }
-
-    connection.onreconnecting((err) => log("Reconnecting...", { error: err?.message }));
-    connection.onreconnected((connectionId) => log("Reconnected", { connectionId }));
-    connection.onclose((err) => log("Closed", { error: err?.message }));
-
-    start();
-  </script>
-</body>
-</html>
+This project requires JWT for hub connection.
+Backend reads token from query string key:
+- access_token
 
 
-2) React/Vite usage with @microsoft/signalr
---------------------------------------------
-Install:
-npm i @microsoft/signalr
+1) Frontend setup (React/Vite)
+------------------------------
+Install package:
+- npm i @microsoft/signalr
 
-Example service:
+Create signalr client service:
 
 import * as signalR from "@microsoft/signalr";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://localhost:5001";
 
-export const restaurantHub = new signalR.HubConnectionBuilder()
-  .withUrl(`${API_BASE_URL}/hubs/restaurant`)
-  .withAutomaticReconnect()
-  .build();
+let connection = null;
+
+export function createRestaurantHubConnection(getAccessToken) {
+  if (connection) return connection;
+
+  connection = new signalR.HubConnectionBuilder()
+    .withUrl(`${API_BASE_URL}/hubs/restaurant`, {
+      accessTokenFactory: async () => {
+        const token = await getAccessToken();
+        return token ?? "";
+      }
+    })
+    .withAutomaticReconnect([0, 2000, 5000, 10000])
+    .configureLogging(signalR.LogLevel.Information)
+    .build();
+
+  connection.onreconnecting((err) => {
+    console.log("SignalR reconnecting", err?.message);
+  });
+
+  connection.onreconnected((id) => {
+    console.log("SignalR reconnected", id);
+  });
+
+  connection.onclose((err) => {
+    console.log("SignalR closed", err?.message);
+  });
+
+  return connection;
+}
 
 export async function startRestaurantHub() {
-  if (restaurantHub.state === signalR.HubConnectionState.Disconnected) {
-    await restaurantHub.start();
+  if (!connection) throw new Error("Call createRestaurantHubConnection first");
+  if (connection.state === signalR.HubConnectionState.Disconnected) {
+    await connection.start();
+    console.log("SignalR connected");
   }
 }
 
-restaurantHub.on("NotifyNewOrder", (payload) => {
-  console.log("NotifyNewOrder", payload);
-});
-
-restaurantHub.on("NotifyOrderStatusChanged", (payload) => {
-  console.log("NotifyOrderStatusChanged", payload);
-});
-
-restaurantHub.on("NotifyPaymentSuccess", (payload) => {
-  console.log("NotifyPaymentSuccess", payload);
-});
-
-
-3) CORS note (important)
-------------------------
-In backend appsettings.Development.json make sure your frontend origin is included:
-
-"Cors": {
-  "AllowedOrigins": [
-    "http://localhost:3000",
-    "http://localhost:5173"
-  ]
+export async function stopRestaurantHub() {
+  if (connection && connection.state !== signalR.HubConnectionState.Disconnected) {
+    await connection.stop();
+  }
 }
 
-Then run backend and frontend with matching origin/domain/protocol (http/https).
+
+2) Listen to events in FE
+-------------------------
+Event names from backend:
+- NotifyNewOrder
+- NotifyOrderStatusChanged
+- NotifyPaymentSuccess
+
+Example binding:
+
+function bindRestaurantHubEvents(connection, handlers) {
+  connection.on("NotifyNewOrder", (payload) => {
+    handlers.onNewOrder?.(payload);
+  });
+
+  connection.on("NotifyOrderStatusChanged", (payload) => {
+    handlers.onOrderStatusChanged?.(payload);
+  });
+
+  connection.on("NotifyPaymentSuccess", (payload) => {
+    handlers.onPaymentSuccess?.(payload);
+  });
+
+  return () => {
+    connection.off("NotifyNewOrder");
+    connection.off("NotifyOrderStatusChanged");
+    connection.off("NotifyPaymentSuccess");
+  };
+}
+
+
+3) React hook sample
+--------------------
+import { useEffect } from "react";
+import {
+  createRestaurantHubConnection,
+  startRestaurantHub,
+  stopRestaurantHub
+} from "./restaurantHub";
+
+export function useRestaurantHub({ getAccessToken, onNewOrder, onOrderStatusChanged, onPaymentSuccess }) {
+  useEffect(() => {
+    const conn = createRestaurantHubConnection(getAccessToken);
+
+    conn.on("NotifyNewOrder", onNewOrder);
+    conn.on("NotifyOrderStatusChanged", onOrderStatusChanged);
+    conn.on("NotifyPaymentSuccess", onPaymentSuccess);
+
+    startRestaurantHub().catch(console.error);
+
+    return () => {
+      conn.off("NotifyNewOrder", onNewOrder);
+      conn.off("NotifyOrderStatusChanged", onOrderStatusChanged);
+      conn.off("NotifyPaymentSuccess", onPaymentSuccess);
+      stopRestaurantHub().catch(console.error);
+    };
+  }, [getAccessToken, onNewOrder, onOrderStatusChanged, onPaymentSuccess]);
+}
+
+
+4) Mapping with your current backend flow
+-----------------------------------------
+Backend currently targets groups by:
+- role:<roleNameLowercase>
+- user:<accountId>
+- order-code:<orderCode>
+
+So FE only needs:
+- connect with valid JWT
+- keep connection alive
+- listen to NotifyOrderStatusChanged
+
+If logged-in user belongs to the target role or target account id group,
+that user receives the event automatically.
+
+
+5) Optional: subscribe by order code
+------------------------------------
+After connected, FE can subscribe to a specific order code:
+
+await connection.invoke("SubscribeOrderCode", orderCode);
+
+Unsubscribe when leaving page:
+
+await connection.invoke("UnsubscribeOrderCode", orderCode);
+
+
+6) CORS and protocol checklist
+------------------------------
+- Add FE origins in appsettings.Development.json:
+
+  "Cors": {
+    "AllowedOrigins": [
+      "http://localhost:3000",
+      "http://localhost:5173"
+    ]
+  }
+
+- API and FE protocol should match (http/http or https/https in dev).
+- If token expires, refresh token in getAccessToken and reconnect.
+
+
+7) Quick FE test script (browser)
+---------------------------------
+Paste into browser console after login token available:
+
+const token = "PASTE_ACCESS_TOKEN";
+const conn = new signalR.HubConnectionBuilder()
+  .withUrl("https://localhost:5001/hubs/restaurant", {
+    accessTokenFactory: () => token
+  })
+  .withAutomaticReconnect()
+  .build();
+
+conn.on("NotifyOrderStatusChanged", (p) => console.log("NotifyOrderStatusChanged", p));
+conn.on("NotifyNewOrder", (p) => console.log("NotifyNewOrder", p));
+conn.on("NotifyPaymentSuccess", (p) => console.log("NotifyPaymentSuccess", p));
+
+await conn.start();
+console.log("connected");
