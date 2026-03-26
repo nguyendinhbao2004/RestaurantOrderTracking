@@ -18,5 +18,6 @@ namespace RestaurantOrderTracking.Application.Dto.OrderItem
         public Guid? AreaId { get; set; }
         public string? AreaName { get; set; }
         public string? OrderType { get; set; }
+        public string? OrderStatus { get; set; }
     }
 }

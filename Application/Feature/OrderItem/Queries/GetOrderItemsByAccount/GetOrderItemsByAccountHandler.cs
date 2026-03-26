@@ -69,7 +69,8 @@ namespace RestaurantOrderTracking.Application.Feature.OrderItem.Queries.GetOrder
                     TableNumber = item.Order?.Table?.TableNumber,
                     AreaId = item.Order?.Table?.AreaId,
                     AreaName = item.Order?.Table?.Area?.Name,
-                    OrderType = item.Order?.OrderTypes.ToString()
+                    OrderType = item.Order?.OrderTypes.ToString(),
+                    OrderStatus = item.Order != null ? ((int)item.Order.Status).ToString() : null
                 };
 
                 if (!string.IsNullOrWhiteSpace(item.CreatedBy) && accountDict.TryGetValue(item.CreatedBy, out var fullName))
