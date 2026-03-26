@@ -21,8 +21,7 @@ namespace Application.Feature.Tables.Commands.Update.UpdateStatus
             if (table == null)
                 return Result<string>.Failure("Table not found");
 
-            if (!Enum.TryParse(request.Status, true, out TableStatus newStatus))
-                return Result<string>.Failure("Invalid table status");
+            var newStatus = (TableStatus)request.Status;
 
             table.UpdateStatus(newStatus);
             _tableRepository.Update(table, cancellationToken);
